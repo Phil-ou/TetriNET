@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Text;
+using TetriNET.Client.Board;
+using TetriNET.Client.Interfaces;
+using TetriNET.Client.Strategy;
+using TetriNET.Common.Attributes;
 using TetriNET.Common.DataContracts;
 using TetriNET.Common.Helpers;
-using TetriNET.Common.Interfaces;
 
 namespace TetriNET.Tests
 {
@@ -16,17 +19,23 @@ namespace TetriNET.Tests
 
         public void Test()
         {
-            IBoard board = new Client.DefaultBoardAndTetriminos.Board(4, 12);
+            IBoard board = new Board(4, 12);
             byte[] cells = new byte[board.Width*board.Height];
             for (int i = 0; i < board.Height; i += 3)
-                cells[0 + i * board.Width] = 1;
+                cells[2 + i * board.Width] = 1;
             board.SetCells(cells);
+
             DisplayBoard(board);
 
-            int buriedHoles = Strategy.BoardHelper.GetBuriedHolesForColumn(board, 1);
-            int holeDepth = Strategy.BoardHelper.GetHoleDepthForColumn(board, 1);
-            int allWells = Strategy.BoardHelper.GetAllWellsForColumn(board, 1);
-            int blockades = Strategy.BoardHelper.GetBlockadesForColumn(board, 1);
+            Console.ReadLine();
+
+            board.LeftGravity();
+            DisplayBoard(board);
+
+            int buriedHoles = BoardHelper.GetBuriedHolesForColumn(board, 1);
+            int holeDepth = BoardHelper.GetHoleDepthForColumn(board, 1);
+            int allWells = BoardHelper.GetAllWellsForColumn(board, 1);
+            int blockades = BoardHelper.GetBlockadesForColumn(board, 1);
 
             Console.WriteLine();
             Console.WriteLine("{0} {1} {2} {3}", buriedHoles, holeDepth, allWells, blockades);
@@ -44,10 +53,10 @@ namespace TetriNET.Tests
                         sb.Append(".");
                     else
                     {
-                        Tetriminos cellTetrimino = CellHelper.GetColor(cellValue);
+                        Pieces cellPiece = CellHelper.GetColor(cellValue);
                         Specials cellSpecial = CellHelper.GetSpecial(cellValue);
                         if (cellSpecial == Specials.Invalid)
-                            sb.Append((int)cellTetrimino);
+                            sb.Append((int)cellPiece);
                         else
                             sb.Append(ConvertSpecial(cellSpecial));
                     }
@@ -62,7 +71,7 @@ namespace TetriNET.Tests
 
         private static char ConvertSpecial(Specials special)
         {
-            AvailabilityAttribute attribute = EnumHelper.GetAttribute<AvailabilityAttribute>(special);
+            SpecialAttribute attribute = EnumHelper.GetAttribute<SpecialAttribute>(special);
             return attribute == null ? '?' : attribute.ShortName;
         }
     }

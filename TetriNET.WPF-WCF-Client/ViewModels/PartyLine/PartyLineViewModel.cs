@@ -1,12 +1,17 @@
-﻿using System.Windows.Input;
-using TetriNET.Client;
+﻿using System;
+using System.ComponentModel;
+using System.Globalization;
+using System.Windows.Controls;
+using System.Windows.Input;
 using TetriNET.Common.DataContracts;
-using TetriNET.Common.Interfaces;
-using TetriNET.WPF_WCF_Client.Helpers;
+using TetriNET.Client.Interfaces;
+using TetriNET.WPF_WCF_Client.Commands;
+using TetriNET.WPF_WCF_Client.Properties;
+using TetriNET.WPF_WCF_Client.Validators;
 
 namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
 {
-    public class PartyLineViewModel : ViewModelBase, ITabIndex
+    public class PartyLineViewModel : ViewModelBase, ITabIndex, IDataErrorInfo
     {
         public ChatViewModel ChatViewModel { get; set; }
         public PlayersManagerViewModel PlayersManagerViewModel { get; set; }
@@ -36,6 +41,35 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
             get { return _isGamePaused ? "Resume game" : "Pause game"; }
         }
 
+        public bool IsUpdateTeamEnabled
+        {
+            get { return _isRegistered && !_isGameStarted; }
+        }
+
+        public bool IsUpdateTeamButtonEnabled
+        {
+            get
+            {
+                string error = this["Team"];
+                return String.IsNullOrWhiteSpace(error) && _isRegistered && !_isGameStarted;
+            }
+        }
+
+        private string _team;
+        public string Team
+        {
+            get { return _team; }
+            set
+            {
+                if (_team != value)
+                {
+                    _team = value;
+                    OnPropertyChanged();
+                    UpdateEnabilityAndLabel();
+                }
+            }
+        }
+
         public PartyLineViewModel()
         {
             _isServerMaster = false;
@@ -47,6 +81,9 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
 
             StartStopCommand = new RelayCommand(StartStop);
             PauseResumeCommand = new RelayCommand(PauseResume);
+            UpdateTeamCommand = new RelayCommand(UpdateTeam);
+
+            Team = Settings.Default.Team;
 
             ClientChanged += OnClientChanged;
         }
@@ -57,6 +94,8 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
             OnPropertyChanged("IsPauseResumeEnabled");
             OnPropertyChanged("StartStopLabel");
             OnPropertyChanged("PauseResumeLabel");
+            OnPropertyChanged("IsUpdateTeamEnabled");
+            OnPropertyChanged("IsUpdateTeamButtonEnabled");
         }
 
         private void StartStop()
@@ -77,11 +116,24 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
             UpdateEnabilityAndLabel();
         }
 
+        private void UpdateTeam()
+        {
+            Settings.Default.Team = _team;
+            Settings.Default.Save();
+            Client.ChangeTeam(Team);
+        }
+
         #region ITabIndex
-        public int TabIndex { get { return 3; } }
+
+        public int TabIndex
+        {
+            get { return 3; }
+        }
+
         #endregion
 
         #region ViewModelBase
+
         private void OnClientChanged(IClient oldClient, IClient newClient)
         {
             ChatViewModel.Client = newClient;
@@ -98,6 +150,7 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
             oldClient.OnGameFinished -= OnGameFinished;
             oldClient.OnGamePaused -= OnGamePaused;
             oldClient.OnGameResumed -= OnGameResumed;
+            oldClient.OnPlayerTeamChanged -= OnPlayerTeamChanged;
         }
 
         public override void SubscribeToClientEvents(IClient newClient)
@@ -110,10 +163,19 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
             newClient.OnGameFinished += OnGameFinished;
             newClient.OnGamePaused += OnGamePaused;
             newClient.OnGameResumed += OnGameResumed;
+            newClient.OnPlayerTeamChanged += OnPlayerTeamChanged;
         }
+
         #endregion
 
         #region IClient events handler
+
+        private void OnPlayerTeamChanged(int playerId, string team)
+        {
+            if (playerId == Client.PlayerId)
+                Team = team;
+        }
+
         private void OnGameResumed()
         {
             _isGamePaused = false;
@@ -144,13 +206,15 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
             UpdateEnabilityAndLabel();
         }
 
-        private void OnPlayerRegistered(RegistrationResults result, int playerId)
+        private void OnPlayerRegistered(RegistrationResults result, int playerId, bool isServerMaster)
         {
             _isRegistered = Client.IsRegistered;
             _isGameStarted = Client.IsGameStarted;
             _isServerMaster = Client.IsServerMaster;
             _isGamePaused = false;
             UpdateEnabilityAndLabel();
+
+            Client.ChangeTeam(Team);
         }
 
         private void OnPlayerUnregistered()
@@ -168,11 +232,54 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
             _isServerMaster = false;
             UpdateEnabilityAndLabel();
         }
+
         #endregion
 
         #region Commands
-        public ICommand StartStopCommand { get; set; }
-        public ICommand PauseResumeCommand { get; set; }
+
+        public ICommand StartStopCommand { get; private set; }
+        public ICommand PauseResumeCommand { get; private set; }
+        public ICommand UpdateTeamCommand { get; private set; }
+
         #endregion
+
+        #region IDataErrorInfo
+
+        public string this[string columnName]
+        {
+            get
+            {
+                if (columnName == "Team")
+                {
+                    StringValidationRule rule = new StringValidationRule
+                        {
+                            FieldName = columnName,
+                            NullAccepted = true
+                        };
+                    ValidationResult result = rule.Validate(Team, CultureInfo.InvariantCulture);
+                    return (string) result.ErrorContent;
+                }
+                return null;
+            }
+        }
+
+        public string Error
+        {
+            get { return String.Empty; }
+        }
+
+        #endregion
+    }
+
+    public class PartyLineViewModelDesignData : PartyLineViewModel
+    {
+        public new ChatViewModelDesignData ChatViewModel { get; private set; }
+        public new PlayersManagerViewModelDesignData PlayersManagerViewModel { get; private set; }
+
+        public PartyLineViewModelDesignData()
+        {
+            ChatViewModel = new ChatViewModelDesignData();
+            PlayersManagerViewModel = new PlayersManagerViewModelDesignData();
+        }
     }
 }

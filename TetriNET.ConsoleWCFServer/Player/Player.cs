@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.ServiceModel;
 using TetriNET.Common.Contracts;
 using TetriNET.Common.DataContracts;
-using TetriNET.Common.Interfaces;
+using TetriNET.Common.Logger;
+using TetriNET.Server.Interfaces;
 
 namespace TetriNET.ConsoleWCFServer.Player
 {
@@ -13,7 +14,7 @@ namespace TetriNET.ConsoleWCFServer.Player
         {
             Name = name;
             Callback = callback;
-            TetriminoIndex = 0;
+            PieceIndex = 0;
             LastActionToClient = DateTime.Now;
             LastActionFromClient = DateTime.Now;
             TimeoutCount = 0;
@@ -34,7 +35,7 @@ namespace TetriNET.ConsoleWCFServer.Player
             }
             catch (Exception ex)
             {
-                Logger.Log.WriteLine(Logger.Log.LogLevels.Error, "Exception:{0} {1}", actionName, ex);
+                Log.WriteLine(Log.LogLevels.Error, "Exception:{0} {1}", actionName, ex);
                 if (OnConnectionLost != null)
                     OnConnectionLost(this);
             }
@@ -45,13 +46,15 @@ namespace TetriNET.ConsoleWCFServer.Player
         public event PlayerConnectionLostHandler OnConnectionLost;
 
         public string Name { get; private set; }
-        public int TetriminoIndex { get; set; }
+        public string Team { get; set; }
+        public int PieceIndex { get; set; }
         public byte[] Grid { get; set; }
         //
         public ITetriNETCallback Callback { get; private set; }
         //
         public PlayerStates State { get; set; }
         public DateTime LossTime { get; set; }
+        public int MutationCount { get; set; }
 
         // Heartbeat management
         public DateTime LastActionToClient { get; private set; } // used to check if heartbeat is needed
@@ -85,9 +88,9 @@ namespace TetriNET.ConsoleWCFServer.Player
             ExceptionFreeAction(() => Callback.OnServerStopped(), "OnServerStopped");
         }
 
-        public void OnPlayerRegistered(RegistrationResults result, int playerId, bool gameStarted)
+        public void OnPlayerRegistered(RegistrationResults result, int playerId, bool gameStarted, bool isServerMaster, GameOptions options)
         {
-            ExceptionFreeAction(() => Callback.OnPlayerRegistered(result, playerId, gameStarted), "OnPlayerRegistered");
+            ExceptionFreeAction(() => Callback.OnPlayerRegistered(result, playerId, gameStarted, isServerMaster, options), "OnPlayerRegistered");
         }
 
         public void OnPlayerJoined(int playerId, string name)
@@ -100,6 +103,11 @@ namespace TetriNET.ConsoleWCFServer.Player
             ExceptionFreeAction(() => Callback.OnPlayerLeft(playerId, name, reason), "OnPlayerLeft");
         }
 
+        public void OnPlayerTeamChanged(int playerId, string team)
+        {
+            ExceptionFreeAction(() => Callback.OnPlayerTeamChanged(playerId, team), "OnPlayerTeamChanged");
+        }
+
         public void OnPlayerLost(int playerId)
         {
             ExceptionFreeAction(() => Callback.OnPlayerLost(playerId), "OnPlayerLost");
@@ -110,9 +118,9 @@ namespace TetriNET.ConsoleWCFServer.Player
             ExceptionFreeAction(() => Callback.OnPlayerWon(playerId), "OnPlayerWon");
         }
 
-        public void OnGameStarted(Tetriminos firstTetrimino, Tetriminos secondTetrimino, Tetriminos thirdTetrimino, GameOptions options)
+        public void OnGameStarted(List<Pieces> pieces, GameOptions options)
         {
-            ExceptionFreeAction(() => Callback.OnGameStarted(firstTetrimino, secondTetrimino, thirdTetrimino, options), "OnGameStarted");
+            ExceptionFreeAction(() => Callback.OnGameStarted(pieces, options), "OnGameStarted");
         }
 
         public void OnGameFinished()
@@ -155,9 +163,9 @@ namespace TetriNET.ConsoleWCFServer.Player
             ExceptionFreeAction(() => Callback.OnSpecialUsed(specialId, playerId, targetId, special), "OnSpecialUsed");
         }
 
-        public void OnNextTetrimino(int index, Tetriminos tetrimino)
+        public void OnNextPiece(int index, List<Pieces> pieces)
         {
-            ExceptionFreeAction(() => Callback.OnNextTetrimino(index, tetrimino), "OnNextTetrimino");
+            ExceptionFreeAction(() => Callback.OnNextPiece(index, pieces), "OnNextPiece");
         }
 
         public void OnGridModified(int playerId, byte[] grid)
@@ -173,6 +181,16 @@ namespace TetriNET.ConsoleWCFServer.Player
         public void OnWinListModified(List<WinEntry> winList)
         {
             ExceptionFreeAction(() => Callback.OnWinListModified(winList), "OnWinListModified");
+        }
+
+        public void OnContinuousSpecialFinished(int playerId, Specials special)
+        {
+            ExceptionFreeAction(() => Callback.OnContinuousSpecialFinished(playerId, special), "OnContinuousSpecialFinished");
+        }
+
+        public void OnAchievementEarned(int playerId, int achievementId, string achievementTitle)
+        {
+            ExceptionFreeAction(() => Callback.OnAchievementEarned(playerId, achievementId, achievementTitle), "OnAchievementEarned");
         }
 
         #endregion

@@ -2,39 +2,48 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
-using TetriNET.Common.Interfaces;
-using TetriNET.Strategy;
+using TetriNET.Client.Interfaces;
+using TetriNET.Client.Strategy;
+using TetriNET.Common.Logger;
 
 namespace TetriNET.ConsoleWCFClient.AI
 {
-    public class PierreDellacherieOnePieceBot
+    public class PierreDellacherieOnePieceBot : IBot
     {
-        private readonly SinaCSpecials _specialStrategy;
-        private readonly PierreDellacherieOnePiece _moveStrategy;
-        private readonly IClient _client;
         private readonly Timer _timer;
         private bool _activated;
 
         public PierreDellacherieOnePieceBot(IClient client)
         {
-            _client = client;
+            Client = client;
 
             _timer = new Timer(10);
             _timer.Elapsed += _timer_Elapsed;
 
-            _specialStrategy = new SinaCSpecials();
-            _moveStrategy = new PierreDellacherieOnePiece();
+            SpecialStrategy = new SinaCSpecials();
+            MoveStrategy = new PierreDellacherieOnePiece();
 
             _activated = false;
-            SleepTime = 100;
+            SleepTime = 50;
 
-            _client.OnRoundStarted += _client_OnRoundStarted;
-            _client.OnGameStarted += client_OnGameStarted;
-            _client.OnGameFinished += _client_OnGameFinished;
-            _client.OnGameOver += _client_OnGameOver;
-            _client.OnGamePaused += _client_OnGamePaused;
-            _client.OnGameResumed += _client_OnGameResumed;
+            Client.OnRoundStarted += _client_OnRoundStarted;
+            Client.OnGameStarted += client_OnGameStarted;
+            Client.OnGameFinished += _client_OnGameFinished;
+            Client.OnGameOver += _client_OnGameOver;
+            Client.OnGamePaused += _client_OnGamePaused;
+            Client.OnGameResumed += _client_OnGameResumed;
         }
+
+        #region IBot
+
+        public string Name
+        {
+            get { return "Pierre Dellacherie 1 piece"; }
+        }
+
+        public ISpecialStrategy SpecialStrategy { get; private set; }
+        public IMoveStrategy MoveStrategy { get; private set; }
+        public IClient Client { get; private set; }
 
         public bool Activated
         {
@@ -50,6 +59,8 @@ namespace TetriNET.ConsoleWCFClient.AI
         }
 
         public int SleepTime { get; set; }
+
+        #endregion
 
         private void _client_OnRoundStarted()
         {
@@ -88,31 +99,31 @@ namespace TetriNET.ConsoleWCFClient.AI
         {
             _timer.Stop();
 
-            if (_client.IsRegistered && _client.Board == null || _client.CurrentTetrimino == null || _client.NextTetrimino == null)
+            if (Client.IsRegistered && Client.Board == null || Client.CurrentPiece == null || Client.NextPiece == null)
                 return;
 
             DateTime searchBestMoveStartTime = DateTime.Now;
 
             // Use specials
-            List<SpecialAdvices> advices;
-            _specialStrategy.GetSpecialAdvice(_client.Board, _client.CurrentTetrimino, _client.NextTetrimino, _client.Inventory, _client.InventorySize, _client.Opponents.ToList(), out advices);
-            foreach (SpecialAdvices advice in advices)
+            List<SpecialAdvice> advices;
+            SpecialStrategy.GetSpecialAdvices(Client.Board, Client.CurrentPiece, Client.NextPiece, Client.Inventory, Client.InventorySize, Client.Opponents.ToList(), out advices);
+            foreach (SpecialAdvice advice in advices)
             {
                 bool continueLoop = true;
                 switch (advice.SpecialAdviceAction)
                 {
-                    case SpecialAdvices.SpecialAdviceActions.Wait:
+                    case SpecialAdvice.SpecialAdviceActions.Wait:
                         continueLoop = false;
                         break;
-                    case SpecialAdvices.SpecialAdviceActions.Discard:
-                        _client.DiscardFirstSpecial();
+                    case SpecialAdvice.SpecialAdviceActions.Discard:
+                        Client.DiscardFirstSpecial();
                         continueLoop = true;
                         break;
-                    case SpecialAdvices.SpecialAdviceActions.UseSelf:
-                        continueLoop = _client.UseSpecial(_client.PlayerId);
+                    case SpecialAdvice.SpecialAdviceActions.UseSelf:
+                        continueLoop = Client.UseSpecial(Client.PlayerId);
                         break;
-                    case SpecialAdvices.SpecialAdviceActions.UseOpponent:
-                        continueLoop = _client.UseSpecial(advice.OpponentId);
+                    case SpecialAdvice.SpecialAdviceActions.UseOpponent:
+                        continueLoop = Client.UseSpecial(advice.OpponentId);
                         break;
                 }
                 if (!continueLoop)
@@ -126,7 +137,7 @@ namespace TetriNET.ConsoleWCFClient.AI
             int bestRotationDelta;
             int bestTranslationDelta;
             bool rotationBeforeTranslation;
-            _moveStrategy.GetBestMove(_client.Board, _client.CurrentTetrimino, _client.NextTetrimino, out bestRotationDelta, out bestTranslationDelta, out rotationBeforeTranslation);
+            MoveStrategy.GetBestMove(Client.Board, Client.CurrentPiece, Client.NextPiece, out bestRotationDelta, out bestTranslationDelta, out rotationBeforeTranslation);
 
             DateTime searchBestModeEndTime = DateTime.Now;
 
@@ -151,25 +162,25 @@ namespace TetriNET.ConsoleWCFClient.AI
             if (sleepTime <= 0)
                 sleepTime = 10;
             System.Threading.Thread.Sleep((int) sleepTime); // delay drop instead of animating
-            _client.Drop();
+            Client.Drop();
             //
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "BEST MOVE found in {0} ms and special in {1} ms", (searchBestModeEndTime - specialManaged).TotalMilliseconds, (specialManaged - searchBestMoveStartTime).TotalMilliseconds);
+            Log.WriteLine(Log.LogLevels.Info, "BEST MOVE found in {0} ms and special in {1} ms", (searchBestModeEndTime - specialManaged).TotalMilliseconds, (specialManaged - searchBestMoveStartTime).TotalMilliseconds);
         }
 
         private void Rotate(int rotationDelta)
         {
             for (int rotateCount = 0; rotateCount < rotationDelta; rotateCount++)
-                _client.RotateClockwise();
+                Client.RotateClockwise();
         }
 
         private void Translate(int translationDelta)
         {
             if (translationDelta < 0)
                 for (int translateCount = 0; translateCount > translationDelta; translateCount--)
-                    _client.MoveLeft();
+                    Client.MoveLeft();
             if (translationDelta > 0)
                 for (int translateCount = 0; translateCount < translationDelta; translateCount++)
-                    _client.MoveRight();
+                    Client.MoveRight();
 
         }
     }

@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading;
 using TetriNET.Common.Contracts;
 using TetriNET.Common.DataContracts;
+using TetriNET.Common.Logger;
 
 namespace TetriNET.ConsoleWCFServer
 {
-    // TODO: dissociate LastAction from server than LastAction to server
     public sealed class DummyBuiltInClient : ITetriNETCallback
     {
         private const int HeartbeatDelay = 300; // in ms
@@ -30,7 +30,7 @@ namespace TetriNET.ConsoleWCFServer
         private readonly Func<ITetriNET> _getProxyFunc;
         private ITetriNET Proxy { get; set; }
         private byte[] PlayerGrid { get; set; }
-        private int TetriminoIndex { get; set; }
+        private int PieceIndex { get; set; }
         private DateTime _lastServerAction;
         private int _timeoutCount;
         private DateTime _lastHeartbeat;
@@ -50,7 +50,7 @@ namespace TetriNET.ConsoleWCFServer
                 PlayerGrid[i * Width] = 1;
 
             IsServerMaster = false;
-            TetriminoIndex = 0;
+            PieceIndex = 0;
 
             _lastHeartbeat = DateTime.Now.AddMilliseconds(-HeartbeatDelay);
             _lastServerAction = DateTime.Now;
@@ -61,7 +61,7 @@ namespace TetriNET.ConsoleWCFServer
 
         public void ConnectToServer()
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "Connecting to server");
+            Log.WriteLine(Log.LogLevels.Info, "Connecting to server");
             State = States.ConnectingToServer;
 
             Proxy = _getProxyFunc();
@@ -74,7 +74,7 @@ namespace TetriNET.ConsoleWCFServer
 
         public void DisconnectFromServer()
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "Disconnecting from server");
+            Log.WriteLine(Log.LogLevels.Info, "Disconnecting from server");
 
             Proxy.UnregisterPlayer(this);
             //
@@ -108,8 +108,8 @@ namespace TetriNET.ConsoleWCFServer
                             Proxy.PublishMessage(this, "I'll kill you");
                             break;
                         case 1:
-                            Proxy.PlaceTetrimino(this, TetriminoIndex, Tetriminos.TetriminoI, 1, 5, 3, PlayerGrid);
-                            TetriminoIndex++;
+                            Proxy.PlacePiece(this, PieceIndex, PieceIndex, Pieces.TetriminoI, 1, 5, 3, PlayerGrid);
+                            PieceIndex++;
                             break;
                         case 2:
                             Proxy.UseSpecial(this, PlayerId, Specials.NukeField);
@@ -130,7 +130,7 @@ namespace TetriNET.ConsoleWCFServer
                 TimeSpan timespan = DateTime.Now - _lastServerAction;
                 if (timespan.TotalMilliseconds > TimeoutDelay)
                 {
-                    Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "Timeout++");
+                    Log.WriteLine(Log.LogLevels.Info, "Timeout++");
                     SetTimeout();
                     if (_timeoutCount >= MaxTimeoutCountBeforeDisconnection)
                         OnServerStopped(); // timeout
@@ -148,7 +148,7 @@ namespace TetriNET.ConsoleWCFServer
 
         public void Lose()
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "Loseeeeeeeer");
+            Log.WriteLine(Log.LogLevels.Info, "Loseeeeeeeer");
             State = States.WaitingStartGame;
 
             Proxy.GameLost(this);
@@ -175,14 +175,14 @@ namespace TetriNET.ConsoleWCFServer
 
         public void OnServerStopped()
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnServerStopped[{0}]", PlayerName);
+            Log.WriteLine(Log.LogLevels.Info, "OnServerStopped[{0}]", PlayerName);
             State = States.ApplicationStarted;
             ResetTimeout();
         }
 
-        public void OnPlayerRegistered(RegistrationResults result, int playerId, bool gameStarted)
+        public void OnPlayerRegistered(RegistrationResults result, int playerId, bool gameStarted, bool isServerMaster, GameOptions options)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnPlayerRegistered[{0}]:{1} => {2} {3}", PlayerName, result, playerId, gameStarted);
+            Log.WriteLine(Log.LogLevels.Info, "OnPlayerRegistered[{0}]:{1} => {2} {3} {4}", PlayerName, result, playerId, gameStarted, isServerMaster);
             ResetTimeout();
             if (result == RegistrationResults.RegistrationSuccessful)
             {
@@ -195,126 +195,143 @@ namespace TetriNET.ConsoleWCFServer
 
         public void OnPlayerJoined(int playerId, string name)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnPlayerJoined[{0}]:{1}[{2}]", PlayerName, name, playerId);
+            Log.WriteLine(Log.LogLevels.Info, "OnPlayerJoined[{0}]:{1}[{2}]", PlayerName, name, playerId);
             ResetTimeout();
         }
 
         public void OnPlayerLeft(int playerId, string name, LeaveReasons reason)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnPlayedLeft[{0}]:{1}[{2}] {3}", PlayerName, name, playerId, reason);
+            Log.WriteLine(Log.LogLevels.Info, "OnPlayedLeft[{0}]:{1}[{2}] {3}", PlayerName, name, playerId, reason);
+            ResetTimeout();
+        }
+
+        public void OnPlayerTeamChanged(int playerId, string team)
+        {
+            Log.WriteLine(Log.LogLevels.Info, "PlayerTeamChanged[{0}]:[1] {2}", PlayerName, playerId, team);
             ResetTimeout();
         }
 
         public void OnPlayerLost(int playerId)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnPlayerLost[{0}]:[{1}]", PlayerName, playerId);
+            Log.WriteLine(Log.LogLevels.Info, "OnPlayerLost[{0}]:[{1}]", PlayerName, playerId);
             ResetTimeout();
         }
 
         public void OnPlayerWon(int playerId)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnPlayerWon[{0}]:[{1}]", PlayerName, playerId);
+            Log.WriteLine(Log.LogLevels.Info, "OnPlayerWon[{0}]:[{1}]", PlayerName, playerId);
             ResetTimeout();
         }
 
-        public void OnGameStarted(Tetriminos firstTetrimino, Tetriminos secondTetrimino, Tetriminos thirdTetrimino, GameOptions options)
+        public void OnGameStarted(List<Pieces> pieces, GameOptions options)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnGameStarted[{0}]:{1} {2} {3}", PlayerName, firstTetrimino, secondTetrimino, thirdTetrimino);
+            Log.WriteLine(Log.LogLevels.Info, "OnGameStarted[{0}]:{1}", PlayerName, pieces.Select(x => x.ToString()).Aggregate((n,i) => n + "," + i));
             ResetTimeout();
             if (State == States.WaitingStartGame)
             {
                 State = States.GameStarted;
-                TetriminoIndex = 0;
+                PieceIndex = 0;
             }
             else
-                Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "Was not waiting start game");
+                Log.WriteLine(Log.LogLevels.Info, "Was not waiting start game");
         }
 
         public void OnGameFinished()
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnGameFinished[{0}]", PlayerName);
+            Log.WriteLine(Log.LogLevels.Info, "OnGameFinished[{0}]", PlayerName);
             ResetTimeout();
             if (State == States.GameStarted)
             {
-                Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "Game finished: #tetrimino: {0}", TetriminoIndex);
+                Log.WriteLine(Log.LogLevels.Info, "Game finished: #piece: {0}", PieceIndex);
                 State = States.GameFinished;
             }
             else
-                Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "Game was not started");
+                Log.WriteLine(Log.LogLevels.Info, "Game was not started");
         }
 
         public void OnGamePaused()
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnGamePaused[{0}]", PlayerName);
+            Log.WriteLine(Log.LogLevels.Info, "OnGamePaused[{0}]", PlayerName);
             ResetTimeout();
         }
 
         public void OnGameResumed()
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnGameResumed[{0}]", PlayerName);
+            Log.WriteLine(Log.LogLevels.Info, "OnGameResumed[{0}]", PlayerName);
             ResetTimeout();
         }
 
         public void OnServerAddLines(int lineCount)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnServerAddLines[{0}]:{1}", PlayerName, lineCount);
+            Log.WriteLine(Log.LogLevels.Info, "OnServerAddLines[{0}]:{1}", PlayerName, lineCount);
             ResetTimeout();
         }
 
         public void OnPlayerAddLines(int specialId, int playerId, int lineCount)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnPlayerAddLines[{0}]:{1} [{2}] {3}", PlayerName, specialId, playerId, lineCount);
+            Log.WriteLine(Log.LogLevels.Info, "OnPlayerAddLines[{0}]:{1} [{2}] {3}", PlayerName, specialId, playerId, lineCount);
             ResetTimeout();
         }
 
         public void OnPublishPlayerMessage(string playerName, string msg)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnPublishPlayerMessage[{0}]:{1}:{2}", PlayerName, playerName, msg);
+            Log.WriteLine(Log.LogLevels.Info, "OnPublishPlayerMessage[{0}]:{1}:{2}", PlayerName, playerName, msg);
             ResetTimeout();
         }
 
         public void OnPublishServerMessage(string msg)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnPublishServerMessage[{0}]:{1}", PlayerName, msg);
+            Log.WriteLine(Log.LogLevels.Info, "OnPublishServerMessage[{0}]:{1}", PlayerName, msg);
             ResetTimeout();
         }
 
         public void OnSpecialUsed(int specialId, int playerId, int targetId, Specials special)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnSpecialUsed[{0}]:{1} [{2}] [{3}] {4}", PlayerName, specialId, playerId, targetId, special);
+            Log.WriteLine(Log.LogLevels.Info, "OnSpecialUsed[{0}]:{1} [{2}] [{3}] {4}", PlayerName, specialId, playerId, targetId, special);
             ResetTimeout();
         }
 
-        public void OnNextTetrimino(int index, Tetriminos tetrimino)
+        public void OnNextPiece(int index, List<Pieces> pieces)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnNextTetrimino[{0}]:{1} {2}", PlayerName, index, tetrimino);
+            Log.WriteLine(Log.LogLevels.Info, "OnNextPiece[{0}]:{1} {2}", PlayerName, index, pieces.Select(x => x.ToString()).Aggregate((n, i) => n + "," + i));
             ResetTimeout();
         }
 
         public void OnGridModified(int playerId, byte[] grid)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnGridModified[{0}]:[{1}] [2]", PlayerName, playerId, grid.Count(x => x > 0));
+            Log.WriteLine(Log.LogLevels.Info, "OnGridModified[{0}]:[{1}] [2]", PlayerName, playerId, grid.Count(x => x > 0));
             ResetTimeout();
         }
 
         public void OnServerMasterChanged(int playerId)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnServerMasterChanged[{0}]:[{1}]", PlayerName, playerId);
+            Log.WriteLine(Log.LogLevels.Info, "OnServerMasterChanged[{0}]:[{1}]", PlayerName, playerId);
             ResetTimeout();
             IsServerMaster = (playerId == PlayerId);
         }
 
         public void OnWinListModified(List<WinEntry> winList)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "OnWinListModified:{0}", winList.Any() ? winList.Select(x => String.Format("{0}:{1}", x.PlayerName, x.Score)).Aggregate((n, i) => n + "|" + i) : "");
+            Log.WriteLine(Log.LogLevels.Info, "OnWinListModified[{0}]:{1}", PlayerName, winList.Any() ? winList.Select(x => String.Format("{0}:{1}", x.PlayerName, x.Score)).Aggregate((n, i) => n + "|" + i) : "");
             ResetTimeout();
+        }
+
+        public void OnContinuousSpecialFinished(int playerId, Specials special)
+        {
+            Log.WriteLine(Log.LogLevels.Info, "OnContinuousSpecialFinished[{0}]:{1} {2}", PlayerName, playerId, special);
+            ResetTimeout();    
+        }
+
+        public void OnAchievementEarned(int playerId, int achievementId, string achievementTitle)
+        {
+            Log.WriteLine(Log.LogLevels.Info, "OnAchievementEarned[{0}]:{1} {2} {3}", PlayerName, playerId, achievementId, achievementTitle);
         }
 
         #endregion
 
         private void Register(string playerName)
         {
-            Logger.Log.WriteLine(Logger.Log.LogLevels.Info, "Registering");
+            Log.WriteLine(Log.LogLevels.Info, "Registering");
             State = States.Registering;
 
             PlayerName = playerName;

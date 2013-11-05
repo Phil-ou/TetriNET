@@ -8,18 +8,21 @@ namespace TetriNET.Common.Contracts
         void RegisterPlayer(ITetriNETCallback callback, string playerName);
         void UnregisterPlayer(ITetriNETCallback callback);
         void Heartbeat(ITetriNETCallback callback);
+        void PlayerTeam(ITetriNETCallback callback, string team);
 
         // Chat
         void PublishMessage(ITetriNETCallback callback, string msg); // Partyline Chat Message
 
         // In-game
-        void PlaceTetrimino(ITetriNETCallback callback, int index, Tetriminos tetrimino, int orientation, int posX, int posY, byte[] grid);
+        void PlacePiece(ITetriNETCallback callback, int pieceIndex, int highestIndex, Pieces piece, int orientation, int posX, int posY, byte[] grid);
         void ModifyGrid(ITetriNETCallback callback, byte[] grid);
         void UseSpecial(ITetriNETCallback callback, int targetId, Specials special);
         void SendLines(ITetriNETCallback callback, int count);
         void GameLost(ITetriNETCallback callback);
+        void FinishContinuousSpecial(ITetriNETCallback callback, Specials special);
+        void EarnAchievement(ITetriNETCallback callback, int achievementId, string achievementTitle);
 
-        // Server management
+        // Server master commands
         void StartGame(ITetriNETCallback callback);
         void StopGame(ITetriNETCallback callback);
         void PauseGame(ITetriNETCallback callback);

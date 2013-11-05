@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
+using TetriNET.Common.Helpers;
 
 namespace TetriNET.Common.DataContracts
 {
@@ -7,7 +9,7 @@ namespace TetriNET.Common.DataContracts
     public class GameOptions
     {
         [DataMember]
-        public List<TetriminoOccurancy> TetriminoOccurancies { get; set; } // in %, number of entries must match Tetriminos enum length
+        public List<PieceOccurancy> PieceOccurancies { get; set; } // in %, number of entries must match Pieces enum length
 
         [DataMember]
         public List<SpecialOccurancy> SpecialOccurancies { get; set; } // in %, number of entries must match Specials enum length
@@ -33,44 +35,44 @@ namespace TetriNET.Common.DataContracts
         [DataMember]
         public int SuddenDeathTick { get; set; } // 1 -> 30, in seconds
 
-        public GameOptions()
+        public void ResetToDefault()
         {
             // Default options
-            TetriminoOccurancies = new List<TetriminoOccurancy>
+            PieceOccurancies = new List<PieceOccurancy>
             {
-                new TetriminoOccurancy
+                new PieceOccurancy
                 {
-                    Value = Tetriminos.TetriminoJ,
+                    Value = Pieces.TetriminoJ,
                     Occurancy = 14
                 },
-                new TetriminoOccurancy
+                new PieceOccurancy
                 {
-                    Value = Tetriminos.TetriminoZ,
+                    Value = Pieces.TetriminoZ,
                     Occurancy = 14
                 },
-                new TetriminoOccurancy
+                new PieceOccurancy
                 {
-                    Value = Tetriminos.TetriminoO,
+                    Value = Pieces.TetriminoO,
                     Occurancy = 15
                 },
-                new TetriminoOccurancy
+                new PieceOccurancy
                 {
-                    Value = Tetriminos.TetriminoL,
+                    Value = Pieces.TetriminoL,
                     Occurancy = 14
                 },
-                new TetriminoOccurancy
+                new PieceOccurancy
                 {
-                    Value = Tetriminos.TetriminoS,
+                    Value = Pieces.TetriminoS,
                     Occurancy = 14
                 },
-                new TetriminoOccurancy
+                new PieceOccurancy
                 {
-                    Value = Tetriminos.TetriminoT,
+                    Value = Pieces.TetriminoT,
                     Occurancy = 14
                 },
-                new TetriminoOccurancy
+                new PieceOccurancy
                 {
-                    Value = Tetriminos.TetriminoI,
+                    Value = Pieces.TetriminoI,
                     Occurancy = 15
                 },
             };
@@ -79,12 +81,12 @@ namespace TetriNET.Common.DataContracts
                 new SpecialOccurancy
                 {
                     Value = Specials.AddLines,
-                    Occurancy = 19
+                    Occurancy = 13
                 },
                 new SpecialOccurancy
                 {
                     Value = Specials.ClearLines,
-                    Occurancy = 16
+                    Occurancy = 13
                 },
                 new SpecialOccurancy
                 {
@@ -94,7 +96,7 @@ namespace TetriNET.Common.DataContracts
                 new SpecialOccurancy
                 {
                     Value = Specials.RandomBlocksClear,
-                    Occurancy = 14
+                    Occurancy = 11
                 },
                 new SpecialOccurancy
                 {
@@ -104,7 +106,7 @@ namespace TetriNET.Common.DataContracts
                 new SpecialOccurancy
                 {
                     Value = Specials.ClearSpecialBlocks,
-                    Occurancy = 14
+                    Occurancy = 10
                 },
                 new SpecialOccurancy
                 {
@@ -119,28 +121,43 @@ namespace TetriNET.Common.DataContracts
                 new SpecialOccurancy
                 {
                     Value = Specials.BlockBomb,
-                    Occurancy = 14
+                    Occurancy = 10
                 },
                 new SpecialOccurancy
                 {
                     Value = Specials.ClearColumn,
-                    Occurancy = 0
+                    Occurancy = 5
+                },
+                new SpecialOccurancy
+                {
+                    Value = Specials.Immunity,
+                    Occurancy = 3
                 },
                 new SpecialOccurancy
                 {
                     Value = Specials.Darkness,
-                    Occurancy = 0
+                    Occurancy = 5
                 },
                 new SpecialOccurancy
                 {
                     Value = Specials.Confusion,
                     Occurancy = 0
                 },
-                //new SpecialOccurancy // will be available when Left Gravity is implemented
-                //{
-                //    Value = Specials.ZebraField,
-                //    Occurancy = 0
-                //},
+                new SpecialOccurancy
+                {
+                    Value = Specials.Mutation,
+                    Occurancy = 7
+                },
+                new SpecialOccurancy // will be available when Left Gravity is implemented
+                {
+                    Value = Specials.ZebraField,
+                    Occurancy = 0
+                },
+                new SpecialOccurancy // will be available when Left Gravity is implemented
+                {
+                    Value = Specials.LeftGravity,
+                    Occurancy = 0
+                },
             };
             ClassicStyleMultiplayerRules = true;
             InventorySize = 10;
@@ -149,6 +166,19 @@ namespace TetriNET.Common.DataContracts
             StartingLevel = 0;
             DelayBeforeSuddenDeath = 0;
             SuddenDeathTick = 1;
+
+            foreach (Pieces piece in EnumHelper.GetPieces(available => available).Where(piece => PieceOccurancies.All(x => x.Value != piece)))
+                PieceOccurancies.Add(new PieceOccurancy
+                    {
+                        Value = piece,
+                        Occurancy = 0
+                    });
+            foreach (Specials special in EnumHelper.GetSpecials(available => available).Where(special => SpecialOccurancies.All(x => x.Value != special)))
+                SpecialOccurancies.Add(new SpecialOccurancy // will be available when Left Gravity is implemented
+                {
+                    Value = special,
+                    Occurancy = 0
+                });
         }
     }
 

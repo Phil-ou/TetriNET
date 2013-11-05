@@ -37,10 +37,9 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
-    <Reference Include="System.ServiceModel.Discovery" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\SpecialAttribute.cs" />
     <Compile Include="Contracts\ITetriNET.cs" />
     <Compile Include="Contracts\ITetriNETCallback.cs" />
     <Compile Include="Contracts\IWCFTetriNET.cs" />
@@ -49,29 +48,16 @@
     <Compile Include="DataContracts\RegistrationResults.cs" />
     <Compile Include="DataContracts\SpecialOccurancy.cs" />
     <Compile Include="DataContracts\Specials.cs" />
-    <Compile Include="DataContracts\TetriminoOccurancy.cs" />
-    <Compile Include="DataContracts\Tetriminos.cs" />
+    <Compile Include="DataContracts\PieceOccurancy.cs" />
+    <Compile Include="DataContracts\Pieces.cs" />
     <Compile Include="DataContracts\WinEntry.cs" />
-    <Compile Include="Helpers\AvailabilityAttribute.cs" />
+    <Compile Include="Attributes\PieceAttribute.cs" />
     <Compile Include="Helpers\CellHelper.cs" />
     <Compile Include="Helpers\Check.cs" />
     <Compile Include="Helpers\EnumHelper.cs" />
     <Compile Include="Helpers\Singleton.cs" />
-    <Compile Include="Interfaces\IBanManager.cs" />
-    <Compile Include="Interfaces\IBoard.cs" />
-    <Compile Include="Interfaces\IClient.cs" />
-    <Compile Include="Interfaces\IClientStatistics.cs" />
-    <Compile Include="Interfaces\IGameController.cs" />
-    <Compile Include="Interfaces\IHost.cs" />
-    <Compile Include="Interfaces\IOpponent.cs" />
-    <Compile Include="Interfaces\IPlayer.cs" />
-    <Compile Include="Interfaces\IPlayerManager.cs" />
-    <Compile Include="Interfaces\IProxy.cs" />
-    <Compile Include="Interfaces\ITetrimino.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Randomizer\RangeRandom.cs" />
-    <Compile Include="WCF\DiscoveryHelper.cs" />
-    <Compile Include="WCF\MetadataHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

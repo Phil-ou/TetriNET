@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{D10DD72D-BC4A-4B47-9568-74C29BC067CD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TetriNET.Client.Achievements</RootNamespace>
+    <AssemblyName>TetriNET.Client.Achievements</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AchievementManager.cs" />
+    <Compile Include="Achievement.cs" />
+    <Compile Include="Achievements\Architect.cs" />
+    <Compile Include="Achievements\BackToBack.cs" />
+    <Compile Include="Achievements\BackToBackAndBackAgain.cs" />
+    <Compile Include="Achievements\CallMeSavior.cs" />
+    <Compile Include="Achievements\CantTouchThis.cs" />
+    <Compile Include="Achievements\Century.cs" />
+    <Compile Include="Achievements\Cnofisuon.cs" />
+    <Compile Include="Achievements\DirtySouthStyle.cs" />
+    <Compile Include="Achievements\DoBarrelRoll.cs" />
+    <Compile Include="Achievements\DropItLikeItsHot.cs" />
+    <Compile Include="Achievements\Eliminator.cs" />
+    <Compile Include="Achievements\Eradicator.cs" />
+    <Compile Include="Achievements\FearMyBrain.cs" />
+    <Compile Include="Achievements\GrandSlam.cs" />
+    <Compile Include="Achievements\HHStyle.cs" />
+    <Compile Include="Achievements\LikeEmperor.cs" />
+    <Compile Include="Achievements\LikeKing.cs" />
+    <Compile Include="Achievements\Looooser.cs" />
+    <Compile Include="Achievements\HitchhikersGuide.cs" />
+    <Compile Include="Achievements\JustInTime.cs" />
+    <Compile Include="Achievements\Magician.cs" />
+    <Compile Include="Achievements\MartyIsInDaPlace.cs" />
+    <Compile Include="Achievements\Millenium.cs" />
+    <Compile Include="Achievements\MillionDollarBaby.cs" />
+    <Compile Include="Achievements\NeedForSpeed.cs" />
+    <Compile Include="Achievements\NewtonsApple.cs" />
+    <Compile Include="Achievements\NuclearLaunchDetected.cs" />
+    <Compile Include="Achievements\PhilouStyle.cs" />
+    <Compile Include="Achievements\RainbowWarrior.cs" />
+    <Compile Include="Achievements\RunBabyRun.cs" />
+    <Compile Include="Achievements\SerialBuilder.cs" />
+    <Compile Include="Achievements\Slam.cs" />
+    <Compile Include="Achievements\Sniper.cs" />
+    <Compile Include="Achievements\SomeLikeItHot.cs" />
+    <Compile Include="Achievements\TetrisAce.cs" />
+    <Compile Include="Achievements\TooEasyForMe.cs" />
+    <Compile Include="Achievements\TooGoodForYou.cs" />
+    <Compile Include="Achievements\VoidMaster.cs" />
+    <Compile Include="Achievements\WhoIsYourDaddy.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TetriNET.Client.Interfaces\TetriNET.Client.Interfaces.csproj">
+      <Project>{85b3313b-f31a-45be-8bf6-8ae55ae484b0}</Project>
+      <Name>TetriNET.Client.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TetriNET.Common.Logger\TetriNET.Common.Logger.csproj">
+      <Project>{1c6b89eb-a58a-4673-a70a-c00bbc325848}</Project>
+      <Name>TetriNET.Common.Logger</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TetriNET.Common\TetriNET.Common.csproj">
+      <Project>{195be21e-603a-4858-a805-09c59107c5a7}</Project>
+      <Name>TetriNET.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

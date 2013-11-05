@@ -1,12 +1,45 @@
-﻿using System;
-//using POC.Client_POC;
+﻿//using POC.Client_POC;
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using System.ServiceModel.Activation;
+using System.ServiceModel.Web;
+using POC.JQuery_WCF;
+using POC.SignalR;
 
 namespace POC
 {
+    
+
     internal class Program
     {
         private static void Main(string[] args)
         {
+            //Service1 service = new Service1();
+
+            //Console.ReadLine();
+
+            //System.Threading.Tasks.Task.Run(() =>
+            //{
+            //    ServiceReference1.Service1Client client = new ServiceReference1.Service1Client("NetTcpBinding_IService1");
+            //    string[] users = client.GetUser("2");
+            //    if (users == null)
+            //        Console.WriteLine("no users");
+            //    else
+            //        Console.WriteLine(users.Aggregate((n, i) => n + "," + i));
+            //    client.Close();
+            //});
+
+            SignalRServer server = new SignalRServer();
+            server.Start();
+
+
+            Console.ReadLine();
+
             //Client client = new Client(callback => new WCFProxy(@"net.tcp://localhost:8765/TetriNET", callback));
             //client.Name = "joel-wpf-client";
             //client._proxy.RegisterPlayer(client, client.Name);
@@ -173,9 +206,9 @@ namespace POC
             UpdateTimerOnAction(() => _callback.OnAttackMessageReceived(msg));
         }
 
-        public void OnNextTetrimino(int index, Tetriminos tetrimino)
+        public void OnNextPiece(int index, Tetriminos tetrimino)
         {
-            UpdateTimerOnAction(() => _callback.OnNextTetrimino(index, tetrimino));
+            UpdateTimerOnAction(() => _callback.OnNextPiece(index, tetrimino));
         }
     }
 

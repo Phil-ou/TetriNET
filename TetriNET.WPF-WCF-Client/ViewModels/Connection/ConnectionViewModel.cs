@@ -1,15 +1,29 @@
-﻿using TetriNET.Common.Interfaces;
+﻿using System;
+using System.Reflection;
+using TetriNET.Client.Interfaces;
+using TetriNET.WPF_WCF_Client.Helpers;
 
 namespace TetriNET.WPF_WCF_Client.ViewModels.Connection
 {
     public class ConnectionViewModel : ViewModelBase, ITabIndex
     {
-        public ConnectionControlViewModel ConnectionControlViewModel { get; set; }
+        public LoginViewModel LoginViewModel { get; set; }
         public ServerListViewModel ServerListViewModel { get; set; }
+
+        public string AssemblyVersion
+        {
+            get
+            {
+                Assembly asm = AssemblyHelper.GetEntryAssembly();
+                Version version = asm.GetName().Version;
+                string company = ((AssemblyCompanyAttribute)Attribute.GetCustomAttribute(asm, typeof(AssemblyCompanyAttribute), false)).Company;
+                return String.Format("TetriNET {0}.{1} by {2}", version.Major, version.Minor, company);
+            }
+        }
 
         public ConnectionViewModel()
         {
-            ConnectionControlViewModel = new ConnectionControlViewModel();
+            LoginViewModel = new LoginViewModel();
             ServerListViewModel = new ServerListViewModel();
             ServerListViewModel.OnServerSelected += OnServerSelected;
 
@@ -18,19 +32,25 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.Connection
 
         private void OnServerSelected(object sender, string serverAddress)
         {
-            ConnectionControlViewModel.ServerAddress = serverAddress;
+            LoginViewModel.ServerAddress = serverAddress;
         }
 
         #region ITabIndex
-        public int TabIndex { get { return 0; } }
+
+        public int TabIndex
+        {
+            get { return 0; }
+        }
+
         #endregion
 
         #region ViewModelBase
+
         private void OnClientChanged(IClient oldClient, IClient newClient)
         {
-            ConnectionControlViewModel.Client = newClient;
+            LoginViewModel.Client = newClient;
         }
-        
+
         public override void UnsubscribeFromClientEvents(IClient oldClient)
         {
             // NOP
@@ -40,6 +60,17 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.Connection
         {
             // NOP
         }
+
         #endregion
+    }
+
+    public class ConnectionViewModelDesignData : ConnectionViewModel
+    {
+        public new LoginViewModelDesignData LoginViewModel { get; private set; }
+
+        public ConnectionViewModelDesignData()
+        {
+            LoginViewModel = new LoginViewModelDesignData();
+        }
     }
 }

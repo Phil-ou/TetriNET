@@ -13,7 +13,9 @@ namespace TetriNET.WPF_WCF_Client.Properties {
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "11.0.0.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+    [global::System.Configuration.SettingsProviderAttribute(typeof(TetriNET.WPF_WCF_Client.CustomSettings.PortableSettingsProvider))]
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase
+    {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
         
@@ -96,7 +98,7 @@ namespace TetriNET.WPF_WCF_Client.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool DisplayOpponentsFieldEvenWhenNotPlaying {
             get {
                 return ((bool)(this["DisplayOpponentsFieldEvenWhenNotPlaying"]));
@@ -367,6 +369,101 @@ namespace TetriNET.WPF_WCF_Client.Properties {
             }
             set {
                 this["UseSpecialOn6"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DisplayDropLocation {
+            get {
+                return ((bool)(this["DisplayDropLocation"]));
+            }
+            set {
+                this["DisplayDropLocation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DisplayPieceAnchor {
+            get {
+                return ((bool)(this["DisplayPieceAnchor"]));
+            }
+            set {
+                this["DisplayPieceAnchor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Team {
+            get {
+                return ((string)(this["Team"]));
+            }
+            set {
+                this["Team"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UpgradeRequired {
+            get {
+                return ((bool)(this["UpgradeRequired"]));
+            }
+            set {
+                this["UpgradeRequired"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IsColorSchemeUsed {
+            get {
+                return ((bool)(this["IsColorSchemeUsed"]));
+            }
+            set {
+                this["IsColorSchemeUsed"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("6")]
+        public int UseSpecialOnSelf {
+            get {
+                return ((int)(this["UseSpecialOnSelf"]));
+            }
+            set {
+                this["UseSpecialOnSelf"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::TetriNET.WPF_WCF_Client.CustomSettings.AchievementsSettings Achievements {
+            get {
+                return ((global::TetriNET.WPF_WCF_Client.CustomSettings.AchievementsSettings)(this["Achievements"]));
+            }
+            set {
+                this["Achievements"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("51")]
+        public int Hold {
+            get {
+                return ((int)(this["Hold"]));
+            }
+            set {
+                this["Hold"] = value;
             }
         }
     }

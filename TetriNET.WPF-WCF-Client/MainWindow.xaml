@@ -6,32 +6,41 @@
         xmlns:options="clr-namespace:TetriNET.WPF_WCF_Client.Views.Options"
         xmlns:partyLine="clr-namespace:TetriNET.WPF_WCF_Client.Views.PartyLine"
         xmlns:winList="clr-namespace:TetriNET.WPF_WCF_Client.Views.WinList"
+        xmlns:achievements="clr-namespace:TetriNET.WPF_WCF_Client.Views.Achievements"
         xmlns:local="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:playField="clr-namespace:TetriNET.WPF_WCF_Client.Views.PlayField"
-        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-        xmlns:helpers="clr-namespace:TetriNET.WPF_WCF_Client.Helpers"
         xmlns:test="clr-namespace:TetriNET.WPF_WCF_Client.Views.Test"
-        xmlns:models="clr-namespace:TetriNET.WPF_WCF_Client.Models"
+        xmlns:connectionViewModels="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels.Connection"
+        xmlns:optionsViewModels="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels.Options"
+        xmlns:winListViewModels="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels.WinList"
+        xmlns:partyLineViewModels="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels.PartyLine"
+        xmlns:statisticsViewModels="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels.Statistics"
+        xmlns:playFieldViewModels="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels.PlayField"
+        xmlns:achievementsViewModels="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels.Achievements"
         mc:Ignorable="d"
         UseLayoutRounding="True"
+        WindowStyle="ToolWindow"
+        ResizeMode="NoResize"
         MouseLeftButtonDown="MainWindow_OnMouseLeftButtonDown"
-        d:DataContext="{d:DesignInstance local:MainWindowViewModel, IsDesignTimeCreatable=False}"
+        KeyboardNavigation.DirectionalNavigation="None"
+        d:DataContext="{d:DesignInstance local:MainWindowViewModelDesignData, IsDesignTimeCreatable=False}"
         Icon="TetriNET.ico"
         Title="TetriNET" 
-        Height="480" Width="720">
+        Height="500" Width="780">
     <!-- No window border ==> no close button either :p add a custom one before using this
+   
         WindowStyle="None"
         AllowsTransparency="True" 
         Background="Transparent" 
 	    ResizeMode="NoResize"        
     -->
-    <!--<Window.CommandBindings>
+    <Window.CommandBindings>
         <CommandBinding Command="ApplicationCommands.Close"
                         Executed="CloseCommandHandler"/>
-    </Window.CommandBindings>-->
-<Window.Resources>
+    </Window.CommandBindings>
+    <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
@@ -41,73 +50,91 @@
         </ResourceDictionary>
     </Window.Resources>
     <Grid>
-        <TabControl SelectedIndex="{Binding ActiveTabItemIndex}">
-            <!--
-            <TabControl.Template>
-                <ControlTemplate TargetType="TabControl">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <Border BorderThickness="0,0,1,1" BorderBrush="#D0CEBF" Grid.Row="1">
-                            <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
-                                <Border Background="{TemplateBinding Background}">
-                                    <ContentPresenter ContentSource="SelectedContent"/>
-                                </Border>
-                            </Border>
-                        </Border>
-                        <DockPanel IsItemsHost="True" LastChildFill="False" Margin="2,2,2,0" />
-                    </Grid>
-                </ControlTemplate>
-            </TabControl.Template>
-            -->
-            <TabItem Header="Connect">
-                <connection:ConnectionView DataContext="{Binding ConnectionViewModel}"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TabControl 
+            Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="3" 
+            KeyboardNavigation.TabNavigation="None"
+            SelectedIndex="{Binding ActiveTabItemIndex}">
+            <TabItem Header="Connect" IsTabStop="False">
+                <connection:ConnectionView 
+                    DataContext="{Binding Path=ConnectionViewModel}" 
+                    d:DataContext="{d:DesignInstance connectionViewModels:ConnectionViewModelDesignData, IsDesignTimeCreatable=True}"/>
             </TabItem>
-            <TabItem Header="Options">
-                <options:OptionsView DataContext="{Binding Path=OptionsViewModel}"/>
+            <TabItem Header="Options" IsTabStop="False">
+                <options:OptionsView 
+                    DataContext="{Binding Path=OptionsViewModel}" 
+                    d:DataContext="{d:DesignInstance optionsViewModels:OptionsViewModelDesignData, IsDesignTimeCreatable=True}"/>
             </TabItem>
-            <TabItem Header="Win list">
-                <winList:WinListView DataContext="{Binding Path=WinListViewModel}" />
+            <TabItem Header="Win list" IsTabStop="False">
+                <winList:WinListView 
+                    DataContext="{Binding Path=WinListViewModel}" 
+                    d:DataContext="{d:DesignInstance winListViewModels:WinListViewModelDesignData, IsDesignTimeCreatable=True }" />
             </TabItem>
-            <TabItem Header="Party line">
-                <partyLine:PartyLineView DataContext="{Binding Path=PartyLineViewModel}"/>
+            <TabItem Header="Party line" IsTabStop="False">
+                <partyLine:PartyLineView 
+                    DataContext="{Binding Path=PartyLineViewModel}" 
+                    d:DataContext="{d:DesignInstance partyLineViewModels:PartyLineViewModelDesignData, IsDesignTimeCreatable=True}"/>
             </TabItem>
-            <TabItem Header="Play fields">
-                <playField:PlayFieldView DataContext="{Binding Path=PlayFieldViewModel}"/>
+            <TabItem Header="Play fields" IsTabStop="False">
+                <playField:PlayFieldView 
+                    DataContext="{Binding Path=PlayFieldViewModel}" 
+                    d:DataContext="{d:DesignInstance playFieldViewModels:PlayFieldViewModelDesignData, IsDesignTimeCreatable=True}"/>
             </TabItem>
-            <TabItem Header="Client statistics" Visibility="{Binding Source={x:Static models:Options.OptionsSingleton}, Path=Instance.IsDeveloperModeActivated, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <statistics:ClientStatisticsView DataContext="{Binding Path=ClientStatisticsViewModel}"/>
+            <TabItem Header="Achievements" IsTabStop="False">
+                <achievements:AchievementsView 
+                    DataContext="{Binding Path=AchievementsViewModel}" 
+                    d:DataContext="{d:DesignInstance achievementsViewModels:AchievementsViewModelDesignData, IsDesignTimeCreatable=True}"/>
             </TabItem>
-            <TabItem Header="Textures test" Visibility="{Binding Source={x:Static models:Options.OptionsSingleton}, Path=Instance.IsDeveloperModeActivated, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TabItem Header="Statistics" IsTabStop="False">
+                <statistics:ClientStatisticsView 
+                    DataContext="{Binding Path=ClientStatisticsViewModel}" 
+                    d:DataContext="{d:DesignInstance statisticsViewModels:ClientStatisticsViewModelDesignData, IsDesignTimeCreatable=True}"/>
+            </TabItem>
+            <TabItem Header="Textures test" IsTabStop="False" Visibility="{Binding Path=OptionsViewModel.ClientOptionsViewModel.IsDeveloperModeActivated, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <test:TestView />
             </TabItem>
-<!--
-            <TabItem DockPanel.Dock="Right" Header="X">
-                <TabItem.Template>
-                    <ControlTemplate>
-                        <Button Content="X" Command="ApplicationCommands.Close" BorderThickness="1">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                                    <Setter Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
-                                                <GradientStop Color="#FFF3F3F3" Offset="0"/>
-                                                <GradientStop Color="#FFEBEBEB" Offset="0.5"/>
-                                                <GradientStop Color="#FFDDDDDD" Offset="0.5"/>
-                                                <GradientStop Color="#FFCDCDCD" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Setter Property="BorderBrush" Value="#FF8C8E94"/>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                    </ControlTemplate>
-                </TabItem.Template>
-            </TabItem>
--->
         </TabControl>
+        <!--<Button x:Name="MinimizeButton" Grid.Row="0" Grid.Column="1" Content="_" Click="Minimize_Click" Width="18" BorderThickness="1">
+            <Button.Style>
+                <Style TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                                <GradientStop Color="#FFF3F3F3" Offset="0"/>
+                                <GradientStop Color="#FFEBEBEB" Offset="0.5"/>
+                                <GradientStop Color="#FFDDDDDD" Offset="0.5"/>
+                                <GradientStop Color="#FFCDCDCD" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="BorderBrush" Value="#FF8C8E94"/>
+                </Style>
+            </Button.Style>
+        </Button>
+        <Button x:Name="CloseButton"  Grid.Row="0" Grid.Column="2" Content="X" Width="18" Command="ApplicationCommands.Close" BorderThickness="1">
+            <Button.Style>
+                <Style TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                                <GradientStop Color="#FFF3F3F3" Offset="0"/>
+                                <GradientStop Color="#FFEBEBEB" Offset="0.5"/>
+                                <GradientStop Color="#FFDDDDDD" Offset="0.5"/>
+                                <GradientStop Color="#FFCDCDCD" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="BorderBrush" Value="#FF8C8E94"/>
+                </Style>
+            </Button.Style>
+        </Button>-->
     </Grid>
 </Window>

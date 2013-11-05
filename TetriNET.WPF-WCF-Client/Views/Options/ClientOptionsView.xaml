@@ -3,14 +3,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:validators="clr-namespace:TetriNET.WPF_WCF_Client.Validators"
              xmlns:optionsViewModel="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels.Options"
-             xmlns:options="clr-namespace:TetriNET.WPF_WCF_Client.Views.Options"
-             xmlns:Models="clr-namespace:TetriNET.WPF_WCF_Client.Models" mc:Ignorable="d" 
+             xmlns:userControls="clr-namespace:TetriNET.WPF_WCF_Client.UserControls"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" mc:Ignorable="d" 
              d:DesignHeight="480" d:DesignWidth="640"
-             d:DataContext="{d:DesignInstance optionsViewModel:ClientOptionsViewModel}">
+             d:DataContext="{d:DesignInstance optionsViewModel:ClientOptionsViewModelDesignData, IsDesignTimeCreatable=True}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid IsEnabled="{Binding IsGameNotStarted}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -19,15 +24,25 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding Options.AutomaticallySwitchToPartyLineOnRegistered, Mode=TwoWay}">Switch on connect</CheckBox>
-        <CheckBox Grid.Row="0" Grid.Column="1" IsChecked="{Binding Options.AutomaticallySwitchToPlayFieldOnGameStarted, Mode=TwoWay}">Switch on start/stop game</CheckBox>
-        <CheckBox Grid.Row="1" Grid.Column="0" IsChecked="{Binding Options.DisplayOpponentsFieldEvenWhenNotPlaying, Mode=TwoWay}">Always show opponents field</CheckBox>
-        <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding Options.IsDeveloperModeActivated, Mode=TwoWay}">Developer mode</CheckBox>
-        <GroupBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Header="Controls">
+        
+        <CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding AutomaticallySwitchToPartyLineOnRegistered, Mode=TwoWay}">Switch on connect</CheckBox>
+        <CheckBox Grid.Row="1" Grid.Column="0" IsChecked="{Binding AutomaticallySwitchToPlayFieldOnGameStarted, Mode=TwoWay}">Switch on start/stop game</CheckBox>
+        <CheckBox Grid.Row="2" Grid.Column="0" IsChecked="{Binding DisplayDropLocation, Mode=TwoWay}">Display drop location</CheckBox>
+        
+        <CheckBox Grid.Row="0" Grid.Column="1" IsChecked="{Binding DisplayOpponentsFieldEvenWhenNotPlaying, Mode=TwoWay}">Show opponents even if not playing</CheckBox>
+        <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding IsColorSchemeUsed, Mode=TwoWay}">Player color mode (restart required)</CheckBox>
+        
+        <CheckBox Grid.Row="0" Grid.Column="2" IsChecked="{Binding IsDeveloperModeActivated, Mode=TwoWay}">Developer mode</CheckBox>
+        <CheckBox Grid.Row="1" Grid.Column="2" IsChecked="{Binding DisplayPieceAnchor, Mode=TwoWay}" Visibility="{Binding IsDeveloperModeActivated, Converter={StaticResource BooleanToVisibilityConverter}}">Display piece center</CheckBox>
+
+        <xctk:ColorPicker Grid.Row="2" Grid.Column="2" ShowAdvancedButton="True" SelectedColor="{Binding TestColor}" Visibility="Collapsed"/> <!-- TEST -->
+        
+        <GroupBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Header="Controls">
             <ItemsControl
-                Grid.IsSharedSizeScope="True" MaxHeight="160"
-                ItemsSource="{Binding Options.KeySettings}">
+                Grid.IsSharedSizeScope="True" MaxHeight="180"
+                ItemsSource="{Binding KeySettings}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <WrapPanel Orientation="Vertical" />
@@ -38,17 +53,17 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="KeySettingCommand"/>
-                                <ColumnDefinition Width="64"/>
+                                <ColumnDefinition Width="100"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="{Binding CommandDescription}"/>
-                            <options:KeyBox Grid.Row="0" Grid.Column="1" DataContext="{Binding}" Margin="0,0,10,0"/>
+                            <userControls:KeyBoxControl Grid.Row="0" Grid.Column="1" DataContext="{Binding}" Margin="0,0,10,0"/>
                         </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </GroupBox>
         
-        <GroupBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Header="Sensibility">
+        <GroupBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Header="Sensibility">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -56,64 +71,11 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="64"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="36"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Drop:"/>
-                <CheckBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,5,0" IsChecked="{Binding Options.DropSensibilityActivated}">Enabled</CheckBox>
-                <TextBox Grid.Row="0" Grid.Column="2" Margin="0,0,5,0" IsEnabled="{Binding Options.DropSensibilityActivated}">
-                    <TextBox.Text>
-                        <Binding Path="Options.DropSensibility" UpdateSourceTrigger="PropertyChanged">
-                            <Binding.ValidationRules>
-                                <validators:NumericValidationRule Minimum="20" Maximum="500"/>
-                            </Binding.ValidationRules>
-                        </Binding>
-                    </TextBox.Text>
-                </TextBox>
-                <Slider Grid.Row="0" Grid.Column="3" Minimum="20" Maximum="500" IsSnapToTickEnabled="True" TickFrequency="1" IsEnabled="{Binding Options.DropSensibilityActivated}" Value="{Binding Options.DropSensibility}"/>
-
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Down:"/>
-                <CheckBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,5,0" IsChecked="{Binding Options.DownSensibilityActivated}">Enabled</CheckBox>
-                <TextBox Grid.Row="1" Grid.Column="2" Margin="0,0,5,0" IsEnabled="{Binding Options.DropSensibilityActivated}">
-                    <TextBox.Text>
-                        <Binding Path="Options.DownSensibility" UpdateSourceTrigger="PropertyChanged">
-                            <Binding.ValidationRules>
-                                <validators:NumericValidationRule Minimum="20" Maximum="500"/>
-                            </Binding.ValidationRules>
-                        </Binding>
-                    </TextBox.Text>
-                </TextBox>
-                <Slider Grid.Row="1" Grid.Column="3" Minimum="20" Maximum="500" IsSnapToTickEnabled="True" TickFrequency="1" IsEnabled="{Binding Options.DownSensibilityActivated}" Value="{Binding Options.DownSensibility}"/>
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Left:"/>
-                <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,5,0" IsChecked="{Binding Options.LeftSensibilityActivated}">Enabled</CheckBox>
-                <TextBox Grid.Row="2" Grid.Column="2" Margin="0,0,5,0" IsEnabled="{Binding Options.DropSensibilityActivated}">
-                    <TextBox.Text>
-                        <Binding Path="Options.LeftSensibility" UpdateSourceTrigger="PropertyChanged">
-                            <Binding.ValidationRules>
-                                <validators:NumericValidationRule Minimum="20" Maximum="500"/>
-                            </Binding.ValidationRules>
-                        </Binding>
-                    </TextBox.Text>
-                </TextBox>
-                <Slider Grid.Row="2" Grid.Column="3" Minimum="20" Maximum="500" IsSnapToTickEnabled="True" TickFrequency="1" IsEnabled="{Binding Options.LeftSensibilityActivated}" Value="{Binding Options.LeftSensibility}"/>
-
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Right:"/>
-                <CheckBox Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,5,0" IsChecked="{Binding Options.RightSensibilityActivated}">Enabled</CheckBox>
-                <TextBox Grid.Row="3" Grid.Column="2" Margin="0,0,5,0" IsEnabled="{Binding Options.DropSensibilityActivated}">
-                    <TextBox.Text>
-                        <Binding Path="Options.RightSensibility" UpdateSourceTrigger="PropertyChanged">
-                            <Binding.ValidationRules>
-                                <validators:NumericValidationRule Minimum="20" Maximum="500"/>
-                            </Binding.ValidationRules>
-                        </Binding>
-                    </TextBox.Text>
-                </TextBox>
-                <Slider Grid.Row="3" Grid.Column="3" Minimum="20" Maximum="500" IsSnapToTickEnabled="True" TickFrequency="1" IsEnabled="{Binding Options.RightSensibilityActivated}" Value="{Binding Options.RightSensibility}"/>
+                
+                <userControls:SensibilityControl Grid.Row="0" Label="Drop :" DataContext="{Binding DropSensibilityViewModel}"/>
+                <userControls:SensibilityControl Grid.Row="1" Label="Down :" DataContext="{Binding DownSensibilityViewModel}"/>
+                <userControls:SensibilityControl Grid.Row="2" Label="Left :" DataContext="{Binding LeftSensibilityViewModel}"/>
+                <userControls:SensibilityControl Grid.Row="3" Label="Right :" DataContext="{Binding RightSensibilityViewModel}"/>
             </Grid>
         </GroupBox>
     </Grid>

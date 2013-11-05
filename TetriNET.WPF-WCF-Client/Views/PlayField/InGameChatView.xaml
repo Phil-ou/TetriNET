@@ -1,0 +1,120 @@
+﻿<UserControl x:Class="TetriNET.WPF_WCF_Client.Views.PlayField.InGameChatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:playField="clr-namespace:TetriNET.WPF_WCF_Client.ViewModels.PlayField"
+             xmlns:converters="clr-namespace:TetriNET.WPF_WCF_Client.Converters" mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance playField:InGameChatViewModelDesignData, IsDesignTimeCreatable=True}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:SpecialToStringConverter x:Key="SpecialToStringConverter"/>
+            <converters:SpecialToBrushConverter x:Key="SpecialToBrushConverter"/>
+            <converters:PlayerIdToBrushConverter x:Key="PlayerIdToBrushConverter"/>
+            <DataTemplate x:Key="SpecialDataTemplate" DataType="{x:Type playField:InGameChatEntry}">
+                <WrapPanel>
+                    <TextBlock Text="{Binding Id}" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="." Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding Special, Converter={StaticResource SpecialToStringConverter}}" Foreground="DarkMagenta" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="on" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding Target}" Foreground="Blue" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="from" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding Source}" Foreground="Blue" FontSize="10"/>
+                </WrapPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="AddOneLineDataTemplate" DataType="{x:Type playField:InGameChatEntry}">
+                <WrapPanel>
+                    <TextBlock Text="{Binding Id}" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="." Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="1" Foreground="DarkMagenta" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="line added to All from" Foreground="DarkMagenta" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding Source}" Foreground="Blue" FontSize="10"/>
+                </WrapPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="AddMultiLinesDataTemplate" DataType="{x:Type playField:InGameChatEntry}">
+                <WrapPanel>
+                    <TextBlock Text="{Binding Id}" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="." Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding LinesAdded}" Foreground="DarkMagenta" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="lines added to All from" Foreground="DarkMagenta" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding Source}" Foreground="Blue" FontSize="10"/>
+                </WrapPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="SpecialColorDataTemplate" DataType="{x:Type playField:InGameChatEntry}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Id}" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="." Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <Rectangle Fill="{Binding Special, Converter={StaticResource SpecialToBrushConverter}}" Width="12" Height="12"/>
+                    <TextBlock Text="on" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding Target}" Foreground="Black" Background="{Binding TargetId, Converter={StaticResource PlayerIdToBrushConverter}}" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="from" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding Source}" Foreground="Black" Background="{Binding SourceId, Converter={StaticResource PlayerIdToBrushConverter}}" FontSize="10"/>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="AddOneLineColorDataTemplate" DataType="{x:Type playField:InGameChatEntry}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Id}" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="." Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="1" Foreground="DarkMagenta" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="line added to All from" Foreground="DarkMagenta" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding Source}" Foreground="Black" Background="{Binding SourceId, Converter={StaticResource PlayerIdToBrushConverter}}" FontSize="10"/>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="AddMultiLinesColorDataTemplate" DataType="{x:Type playField:InGameChatEntry}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Id}" Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="." Foreground="Black" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding LinesAdded}" Foreground="DarkMagenta" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="lines added to All from" Foreground="DarkMagenta" FontSize="10" Margin="0,0,2,0"/>
+                    <TextBlock Text="{Binding Source}" Foreground="Black" Background="{Binding SourceId, Converter={StaticResource PlayerIdToBrushConverter}}" FontSize="10" TextWrapping="Wrap"/>
+                </StackPanel>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="Attacks/Defenses" HorizontalAlignment="Left" />
+        <ItemsControl 
+            Grid.Row="1" IsTabStop="False" Focusable="False" FocusManager.IsFocusScope="False"
+            Background="White" Width="300" MaxWidth="300" Height="Auto" HorizontalAlignment="Left" VerticalAlignment="Top"
+            ItemsSource="{Binding Entries, Mode=OneWay}">
+            <!--<ItemsControl.Template>
+                <ControlTemplate>
+                    <ItemsPresenter />
+                </ControlTemplate>
+            </ItemsControl.Template>-->
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type playField:InGameChatEntry}">
+                    <ContentControl Content="{Binding}" IsTabStop="False">
+                        <ContentControl.Style>
+                            <Style TargetType="{x:Type ContentControl}">
+                                <Setter Property="ContentTemplate" Value="{StaticResource SpecialDataTemplate}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsAddOneLine}" Value="True">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource AddOneLineDataTemplate}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsMoreThanOneLine}" Value="True">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource AddMultiLinesDataTemplate}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsColorSpecial}" Value="True">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource SpecialColorDataTemplate}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsColorAddOneLine}" Value="True">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource AddOneLineColorDataTemplate}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsColorMoreThanOneLine}" Value="True">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource AddMultiLinesColorDataTemplate}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                    </ContentControl>
+                </DataTemplate>
+                
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</UserControl>

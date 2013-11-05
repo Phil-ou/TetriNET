@@ -2,11 +2,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using TetriNET.Common.DataContracts;
-using TetriNET.Common.Interfaces;
-using TetriNET.Strategy.Move_strategies;
+using TetriNET.Client.Interfaces;
+using TetriNET.Client.Strategy;
 using TetriNET.WPF_WCF_Client.AI;
-using TetriNET.WPF_WCF_Client.Models;
+using TetriNET.WPF_WCF_Client.ViewModels.Options;
 using TetriNET.WPF_WCF_Client.ViewModels.PlayField;
 
 namespace TetriNET.WPF_WCF_Client.Views.PlayField
@@ -16,9 +15,9 @@ namespace TetriNET.WPF_WCF_Client.Views.PlayField
     /// </summary>
     public partial class PlayFieldView : UserControl
     {
-        private GenericBot _bot;
         private GameController.GameController _controller;
-        private int _playerId;
+
+        public GenericBot Bot { get; private set; }
 
         public PlayFieldView()
         {
@@ -31,52 +30,24 @@ namespace TetriNET.WPF_WCF_Client.Views.PlayField
 
         #region IClient events handler
 
-        private void OnPlayerLeft(int playerId, string playerName, LeaveReasons reason)
-        {
-            OpponentGridControl grid = GetOpponentGrid(playerId);
-            if (grid != null)
-            {
-                grid.PlayerId = -1;
-                grid.PlayerName = "Not playing";
-            }
-        }
-
-        private void OnPlayerJoined(int playerId, string playerName)
-        {
-            OpponentGridControl grid = GetOpponentGrid(playerId);
-            if (grid != null)
-            {
-                grid.PlayerId = playerId;
-                grid.PlayerName = playerName;
-            }
-        }
-
-        private void OnPlayerRegistered(RegistrationResults result, int playerId)
-        {
-            if (result == RegistrationResults.RegistrationSuccessful)
-                _playerId = playerId;
-            else
-                _playerId = -1;
-        }
-
         private void OnGameStarted()
         {
-            if (Models.Options.OptionsSingleton.Instance.DropSensibilityActivated)
-                _controller.RemoveSensibility(Commands.Drop);
+            if (ClientOptionsViewModel.Instance.DropSensibilityViewModel.IsActivated)
+                _controller.RemoveSensibility(Client.Interfaces.Commands.Drop);
             else
-                _controller.AddSensibility(Commands.Drop, Models.Options.OptionsSingleton.Instance.DropSensibility);
-            if (Models.Options.OptionsSingleton.Instance.DownSensibilityActivated)
-                _controller.RemoveSensibility(Commands.Down);
+                _controller.AddSensibility(Client.Interfaces.Commands.Drop, ClientOptionsViewModel.Instance.DropSensibilityViewModel.Value);
+            if (ClientOptionsViewModel.Instance.DownSensibilityViewModel.IsActivated)
+                _controller.RemoveSensibility(Client.Interfaces.Commands.Down);
             else
-                _controller.AddSensibility(Commands.Down, Models.Options.OptionsSingleton.Instance.DownSensibility);
-            if (Models.Options.OptionsSingleton.Instance.LeftSensibilityActivated)
-                _controller.RemoveSensibility(Commands.Left);
+                _controller.AddSensibility(Client.Interfaces.Commands.Down, ClientOptionsViewModel.Instance.DownSensibilityViewModel.Value);
+            if (ClientOptionsViewModel.Instance.LeftSensibilityViewModel.IsActivated)
+                _controller.RemoveSensibility(Client.Interfaces.Commands.Left);
             else
-                _controller.AddSensibility(Commands.Left, Models.Options.OptionsSingleton.Instance.LeftSensibility);
-            if (Models.Options.OptionsSingleton.Instance.RightSensibilityActivated)
-                _controller.RemoveSensibility(Commands.Right);
+                _controller.AddSensibility(Client.Interfaces.Commands.Left, ClientOptionsViewModel.Instance.LeftSensibilityViewModel.Value);
+            if (ClientOptionsViewModel.Instance.RightSensibilityViewModel.IsActivated)
+                _controller.RemoveSensibility(Client.Interfaces.Commands.Right);
             else
-                _controller.AddSensibility(Commands.Down, Models.Options.OptionsSingleton.Instance.RightSensibility);
+                _controller.AddSensibility(Client.Interfaces.Commands.Right, ClientOptionsViewModel.Instance.RightSensibilityViewModel.Value);
         }
 
         #endregion
@@ -86,7 +57,7 @@ namespace TetriNET.WPF_WCF_Client.Views.PlayField
         private void GameView_KeyDown(object sender, KeyEventArgs e)
         {
             PlayFieldViewModel vm = DataContext as PlayFieldViewModel;
-            if (e.Key == Key.S )
+            if (e.Key == Key.S)
             {
                 if (vm != null)
                     vm.Client.StartGame();
@@ -98,104 +69,87 @@ namespace TetriNET.WPF_WCF_Client.Views.PlayField
             }
             else if (e.Key == Key.A && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) )
             {
-                _bot.Activated = !_bot.Activated;
+                Bot.Activated = !Bot.Activated;
             }
             else if (e.Key == Key.H && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
             {
                 PlayerGrid.ToggleHint();
+                Inventory.ToggleHint();
+            }
+            else if (e.Key == Key.D && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                PlayerGrid.ToggleDropLocation();
             }
             else if (e.Key == Key.Add)
             {
-                _bot.SleepTime += 100;
+                Bot.SleepTime += 100;
             }
             else if (e.Key == Key.Subtract)
             {
-                _bot.SleepTime -= 100;
+                Bot.SleepTime -= 100;
             }
             else
             {
-                Commands cmd = MapKeyToCommand(e.Key);
-                if (cmd != Commands.Invalid)
+                Client.Interfaces.Commands cmd = MapKeyToCommand(e.Key);
+                if (cmd != Client.Interfaces.Commands.Invalid)
                     _controller.KeyDown(cmd);
             }
         }
 
         private void GameView_KeyUp(object sender, KeyEventArgs e)
         {
-            Commands cmd = MapKeyToCommand(e.Key);
-            if (cmd != Commands.Invalid)
+            Client.Interfaces.Commands cmd = MapKeyToCommand(e.Key);
+            if (cmd != Client.Interfaces.Commands.Invalid)
                 _controller.KeyUp(cmd);
         }
         
         #endregion
 
-        private static Commands MapKeyToCommand(Key key)
+        private Client.Interfaces.Commands MapKeyToCommand(Key key)
         {
-            KeySetting keySetting = Models.Options.OptionsSingleton.Instance.KeySettings.FirstOrDefault(x => x.Key == key);
+            KeySettingViewModel keySetting = ClientOptionsViewModel.Instance.KeySettings.FirstOrDefault(x => x.Key == key);
             if (keySetting != null)
                 return keySetting.Command;
             switch (key)
             {
+                case Key.H:
+                    return Client.Interfaces.Commands.Hold;
                 case Key.Space:
-                    return Commands.Drop;
+                    return Client.Interfaces.Commands.Drop;
                 case Key.Down:
-                    return Commands.Down;
+                    return Client.Interfaces.Commands.Down;
                 case Key.Left:
-                    return Commands.Left;
+                    return Client.Interfaces.Commands.Left;
                 case Key.Right:
-                    return Commands.Right;
+                    return Client.Interfaces.Commands.Right;
                 case Key.Up:
-                    return Commands.RotateCounterclockwise;
+                    return Client.Interfaces.Commands.RotateCounterclockwise;
                 case Key.PageDown:
-                    return Commands.RotateClockwise;
+                    return Client.Interfaces.Commands.RotateClockwise;
                 case Key.D:
-                    return Commands.DiscardFirstSpecial;
+                    return Client.Interfaces.Commands.DiscardFirstSpecial;
                 case Key.NumPad1:
                 case Key.D1:
-                    return Commands.UseSpecialOn1;
+                    return Client.Interfaces.Commands.UseSpecialOn1;
                 case Key.NumPad2:
                 case Key.D2:
-                    return Commands.UseSpecialOn2;
+                    return Client.Interfaces.Commands.UseSpecialOn2;
                 case Key.NumPad3:
                 case Key.D3:
-                    return Commands.UseSpecialOn3;
+                    return Client.Interfaces.Commands.UseSpecialOn3;
                 case Key.NumPad4:
                 case Key.D4:
-                    return Commands.UseSpecialOn4;
+                    return Client.Interfaces.Commands.UseSpecialOn4;
                 case Key.NumPad5:
                 case Key.D5:
-                    return Commands.UseSpecialOn5;
+                    return Client.Interfaces.Commands.UseSpecialOn5;
                 case Key.NumPad6:
                 case Key.D6:
-                    return Commands.UseSpecialOn6;
+                    return Client.Interfaces.Commands.UseSpecialOn6;
+                case Key.Enter:
+                    return Client.Interfaces.Commands.UseSpecialOn6;
             }
-            return Commands.Invalid;
-        }
-
-        private OpponentGridControl GetOpponentGrid(int playerId)
-        {
-            if (playerId == _playerId)
-                return null;
-            // playerId -> id mapping rule
-            // 0 1 [2] 3 4 5 -> 1 2 / 3 4 5
-            // [0] 1 2 3 4 5 -> / 1 2 3 4 5 
-            // 0 1 2 3 4 [5] -> 1 2 3 4 5 /
-            int id;
-            if (playerId < _playerId)
-                id = playerId + 1;
-            else
-                id = playerId;
-            if (id == 1)
-                return OpponentGrid1;
-            if (id == 2)
-                return OpponentGrid2;
-            if (id == 3)
-                return OpponentGrid3;
-            if (id == 4)
-                return OpponentGrid4;
-            if (id == 5)
-                return OpponentGrid5;
-            return null;
+            return Client.Interfaces.Commands.Invalid;
         }
 
         private void PlayFieldView_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -216,41 +170,32 @@ namespace TetriNET.WPF_WCF_Client.Views.PlayField
             // Remove old handlers
             if (oldClient != null)
             {
-                oldClient.OnPlayerJoined -= OnPlayerJoined;
-                oldClient.OnPlayerLeft -= OnPlayerLeft;
-                oldClient.OnPlayerRegistered -= OnPlayerRegistered;
                 oldClient.OnGameStarted -= OnGameStarted;
 
                 if (_controller != null)
                     _controller.UnsubscribeFromClientEvents();
-                if (_bot != null)
-                    _bot.UnsubscribeFromClientEvents();
+                if (Bot != null)
+                    Bot.UnsubscribeFromClientEvents();
             }
             // Set new client
             Inventory.Client = newClient;
-            NextTetrimino.Client = newClient;
-            PlayerGrid.Client = newClient;
-            OpponentGrid1.Client = newClient;
-            OpponentGrid2.Client = newClient;
-            OpponentGrid3.Client = newClient;
-            OpponentGrid4.Client = newClient;
-            OpponentGrid5.Client = newClient;
+            NextPiece.Client = newClient;
+            HoldPiece.Client = newClient;
             // Add new handlers
             if (newClient != null)
             {
-                newClient.OnPlayerJoined += OnPlayerJoined;
-                newClient.OnPlayerLeft += OnPlayerLeft;
-                newClient.OnPlayerRegistered += OnPlayerRegistered;
                 newClient.OnGameStarted += OnGameStarted;
 
                 // And create controller + bot
                 _controller = new GameController.GameController(newClient);
-                _bot = new GenericBot(newClient, new LuckyToiletOnePiece(), null);
+                //Bot = new GenericBot(newClient, new LuckyToiletOnePiece(), null);
+                Bot = new GenericBot(newClient, new AdvancedPierreDellacherieOnePiece(), new SinaCSpecials());
+                //Bot = new GenericBot(newClient, new ColinFaheyTwoPiece(), new SinaCSpecials());
             }
             else
             {
                 _controller = null;
-                _bot = null;
+                Bot = null;
             }
         }
     }

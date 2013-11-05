@@ -57,10 +57,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
-    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Externals\System.Windows.Interactivity.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xaml">
@@ -80,16 +76,43 @@
     </ApplicationDefinition>
     <Compile Include="AI\GenericBot.cs" />
     <Compile Include="Converters\ChatColorBrushConverter.cs" />
-    <Compile Include="Helpers\EventToCommand.cs" />
-    <Compile Include="Helpers\RelayCommand.cs" />
-    <Compile Include="Models\KeySetting.cs" />
+    <Compile Include="Converters\PlayerIdToBrushConverter.cs" />
+    <Compile Include="Converters\SpecialToBrushConverter.cs" />
+    <Compile Include="Converters\SpecialToStringConverter.cs" />
+    <Compile Include="Commands\AsyncRelayCommand.cs" />
+    <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="Converters\StringColorConverter.cs" />
+    <Compile Include="CustomSettings\Achievements.cs" />
+    <Compile Include="CustomSettings\PortableSettingsProvider.cs" />
+    <Compile Include="Helpers\AssemblyHelper.cs" />
+    <Compile Include="Helpers\AttachedFocus.cs" />
+    <Compile Include="Helpers\VisualTree.cs" />
+    <Compile Include="Models\ChatColor.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="UserControls\MetroLoadingControl.xaml.cs">
+      <DependentUpon>MetroLoadingControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\PieceControl.xaml.cs">
+      <DependentUpon>PieceControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\ShadowPieceControl.xaml.cs">
+      <DependentUpon>ShadowPieceControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\SensibilityControl.xaml.cs">
+      <DependentUpon>SensibilityControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Validators\StringValidationRule.cs" />
+    <Compile Include="ViewModels\Achievements\AchievementsViewModel.cs" />
     <Compile Include="ViewModels\ITabIndex.cs" />
+    <Compile Include="ViewModels\Options\KeySettingViewModel.cs" />
     <Compile Include="TextureManager\ITextureManager.cs" />
-    <Compile Include="ViewModels\Connection\ConnectionControlViewModel.cs" />
+    <Compile Include="ViewModels\Connection\LoginViewModel.cs" />
     <Compile Include="ViewModels\Connection\ConnectionViewModel.cs" />
     <Compile Include="ViewModels\Connection\ServerListViewModel.cs" />
     <Compile Include="ViewModels\Options\ClientOptionsViewModel.cs" />
+    <Compile Include="ViewModels\Options\SensibilityViewModel.cs" />
     <Compile Include="ViewModels\Options\ServerOptionsViewModel.cs" />
+    <Compile Include="ViewModels\PlayField\OpponentViewModel.cs" />
     <Compile Include="ViewModels\PlayField\PlayerViewModel.cs" />
     <Compile Include="ViewModels\PlayField\GameInfoViewModel.cs" />
     <Compile Include="ViewModels\PlayField\PlayFieldViewModel.cs" />
@@ -102,31 +125,40 @@
     <Compile Include="ViewModels\PartyLine\PartyLineViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="ViewModels\WinList\WinListViewModel.cs" />
-    <Compile Include="Views\Connection\ConnectionControl.xaml.cs">
-      <DependentUpon>ConnectionControl.xaml</DependentUpon>
+    <Compile Include="UserControls\CircularProgressBarControl.xaml.cs">
+      <DependentUpon>CircularProgressBarControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Achievements\AchievementsView.xaml.cs">
+      <DependentUpon>AchievementsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Connection\LoginView.xaml.cs">
+      <DependentUpon>LoginView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Options\ClientOptionsView.xaml.cs">
       <DependentUpon>ClientOptionsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Options\KeyBox.cs" />
+    <Compile Include="UserControls\KeyBoxControl.cs" />
     <Compile Include="Views\Options\ServerOptionsView.xaml.cs">
       <DependentUpon>ServerOptionsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\PlayField\GameInfoControl.xaml.cs">
-      <DependentUpon>GameInfoControl.xaml</DependentUpon>
+    <Compile Include="Views\PlayField\GameInfoView.xaml.cs">
+      <DependentUpon>GameInfoView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Helpers\ListBoxExtenders.cs" />
-    <Compile Include="Views\PlayField\NextTetriminoControl.xaml.cs">
-      <DependentUpon>NextTetriminoControl.xaml</DependentUpon>
+    <Compile Include="Views\PlayField\HoldNextPiece.xaml.cs">
+      <DependentUpon>HoldNextPiece.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\PlayField\OpponentGridControl.xaml.cs">
-      <DependentUpon>OpponentGridControl.xaml</DependentUpon>
+    <Compile Include="Views\PlayField\NextPieceView.xaml.cs">
+      <DependentUpon>NextPieceView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\PartyLine\PlayersManagerControl.xaml.cs">
-      <DependentUpon>PlayersManagerControl.xaml</DependentUpon>
+    <Compile Include="Views\PlayField\OpponentGridView.xaml.cs">
+      <DependentUpon>OpponentGridView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Connection\ServerListControl.xaml.cs">
-      <DependentUpon>ServerListControl.xaml</DependentUpon>
+    <Compile Include="Views\PartyLine\PlayersManagerView.xaml.cs">
+      <DependentUpon>PlayersManagerView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Connection\ServerListView.xaml.cs">
+      <DependentUpon>ServerListView.xaml</DependentUpon>
     </Compile>
     <Compile Include="TextureManager\TextureManager.cs" />
     <Compile Include="Helpers\ObservableDictionary.cs" />
@@ -137,10 +169,9 @@
     <Compile Include="Views\Options\OptionsView.xaml.cs">
       <DependentUpon>OptionsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\PlayField\PlayerGridControl.xaml.cs">
-      <DependentUpon>PlayerGridControl.xaml</DependentUpon>
+    <Compile Include="Views\PlayField\PlayerGridView.xaml.cs">
+      <DependentUpon>PlayerGridView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Models\Options.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Views\Connection\ConnectionView.xaml.cs">
       <DependentUpon>ConnectionView.xaml</DependentUpon>
@@ -157,6 +188,30 @@
     <Compile Include="Views\WinList\WinListView.xaml.cs">
       <DependentUpon>WinListView.xaml</DependentUpon>
     </Compile>
+    <Page Include="UserControls\CircularProgressBarControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\MetroLoadingControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\PieceControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\ShadowPieceControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\SensibilityControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Achievements\AchievementsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Options\ClientOptionsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -165,31 +220,35 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\PartyLine\ChatControl.xaml">
+    <Page Include="Views\PartyLine\ChatView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Connection\ConnectionControl.xaml">
+    <Page Include="Views\Connection\LoginView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\PlayField\GameInfoControl.xaml">
+    <Page Include="Views\PlayField\GameInfoView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\PlayField\NextTetriminoControl.xaml">
+    <Page Include="Views\PlayField\HoldNextPiece.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\PlayField\OpponentGridControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\PartyLine\PlayersManagerControl.xaml">
+    <Page Include="Views\PlayField\NextPieceView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Connection\ServerListControl.xaml">
+    <Page Include="Views\PlayField\OpponentGridView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\PartyLine\PlayersManagerView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Connection\ServerListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -201,15 +260,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\PlayField\PlayerGridControl.xaml">
+    <Page Include="Views\PlayField\PlayerGridView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\PlayField\InGameChatControl.xaml">
+    <Page Include="Views\PlayField\InGameChatView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\PlayField\InventoryControl.xaml">
+    <Page Include="Views\PlayField\InventoryView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -217,19 +276,18 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="AI\PierreDellacherieOnePieceBot.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Views\PartyLine\ChatControl.xaml.cs">
-      <DependentUpon>ChatControl.xaml</DependentUpon>
+    <Compile Include="Views\PartyLine\ChatView.xaml.cs">
+      <DependentUpon>ChatView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\PlayField\InGameChatControl.xaml.cs">
-      <DependentUpon>InGameChatControl.xaml</DependentUpon>
+    <Compile Include="Views\PlayField\InGameChatView.xaml.cs">
+      <DependentUpon>InGameChatView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\PlayField\InventoryControl.xaml.cs">
-      <DependentUpon>InventoryControl.xaml</DependentUpon>
+    <Compile Include="Views\PlayField\InventoryView.xaml.cs">
+      <DependentUpon>InventoryView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Helpers\Mapper.cs" />
     <Compile Include="Helpers\ExecuteOnUIThread.cs" />
@@ -277,6 +335,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <Content Include="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -288,6 +349,18 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\TetriNET.Client.Achievements\TetriNET.Client.Achievements.csproj">
+      <Project>{d10dd72d-bc4a-4b47-9568-74c29bc067cd}</Project>
+      <Name>TetriNET.Client.Achievements</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TetriNET.Client.Board\TetriNET.Client.Board.csproj">
+      <Project>{c1d244a2-a501-455e-8522-354f3e5470f8}</Project>
+      <Name>TetriNET.Client.Board</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TetriNET.Client.Interfaces\TetriNET.Client.Interfaces.csproj">
+      <Project>{85b3313b-f31a-45be-8bf6-8ae55ae484b0}</Project>
+      <Name>TetriNET.Client.Interfaces</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TetriNET.Client\TetriNET.Client.csproj">
       <Project>{fd867b2e-a1c2-4052-af79-ef69aed92597}</Project>
       <Name>TetriNET.Client</Name>
@@ -296,27 +369,48 @@
       <Project>{195be21e-603a-4858-a805-09c59107c5a7}</Project>
       <Name>TetriNET.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TetriNET.Logger\TetriNET.Logger.csproj">
+    <ProjectReference Include="..\TetriNET.Client.Pieces\TetriNET.Client.Pieces.csproj">
+      <Project>{2bd5936f-015d-473f-9161-6b837ef3a3ba}</Project>
+      <Name>TetriNET.Client.Pieces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TetriNET.Common.Logger\TetriNET.Common.Logger.csproj">
       <Project>{1c6b89eb-a58a-4673-a70a-c00bbc325848}</Project>
-      <Name>TetriNET.Logger</Name>
+      <Name>TetriNET.Common.Logger</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TetriNET.Strategy\TetriNET.Strategy.csproj">
+    <ProjectReference Include="..\TetriNET.Client.Strategy\TetriNET.Client.Strategy.csproj">
       <Project>{b77d651e-658c-45d4-972a-3c0d569d689e}</Project>
-      <Name>TetriNET.Strategy</Name>
+      <Name>TetriNET.Client.Strategy</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TetriNET.WCFProxy\TetriNET.WCFProxy.csproj">
+    <ProjectReference Include="..\TetriNET.Client.WCFProxy\TetriNET.Client.WCFProxy.csproj">
       <Project>{b85b19f2-5c8d-4ab8-96e2-379b482089f9}</Project>
-      <Name>TetriNET.WCFProxy</Name>
+      <Name>TetriNET.Client.WCFProxy</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="TetriNET.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Textures\bigbackground.bmp">
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Textures\big_AddLines.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Textures\big_AddLines.bmp">
+    <Content Include="Textures\big_background.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Textures\big_BlockBomb.bmp">
@@ -343,7 +437,13 @@
     <Content Include="Textures\big_Darkness.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Textures\big_Immunity.bmp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Textures\big_LeftGravity.bmp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Textures\big_Mutation.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Textures\big_NukeField.bmp">
@@ -379,10 +479,10 @@
     <Content Include="Textures\big_ZebraField.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Textures\smallbackground.bmp">
+    <Content Include="Textures\small_AddLines.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Textures\small_AddLines.bmp">
+    <Content Include="Textures\small_background.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Textures\small_BlockBomb.bmp">
@@ -409,7 +509,13 @@
     <Content Include="Textures\small_Darkness.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Textures\small_Immunity.bmp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Textures\small_LeftGravity.bmp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Textures\small_Mutation.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Textures\small_NukeField.bmp">
@@ -445,23 +551,6 @@
     <Content Include="Textures\small_ZebraField.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,9 +1,11 @@
-﻿using System.Linq;
-using TetriNET.Client;
-using TetriNET.Client.DefaultBoardAndTetriminos;
+﻿using TetriNET.Client.Achievements;
+using TetriNET.Client.Board;
+using TetriNET.Client.Pieces;
 using TetriNET.Common.DataContracts;
-using TetriNET.Common.Interfaces;
+using TetriNET.Client.Interfaces;
+using TetriNET.WPF_WCF_Client.CustomSettings;
 using TetriNET.WPF_WCF_Client.Properties;
+using TetriNET.WPF_WCF_Client.ViewModels.Achievements;
 using TetriNET.WPF_WCF_Client.ViewModels.Connection;
 using TetriNET.WPF_WCF_Client.ViewModels.Options;
 using TetriNET.WPF_WCF_Client.ViewModels.PartyLine;
@@ -15,19 +17,19 @@ namespace TetriNET.WPF_WCF_Client.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        public WinListViewModel WinListViewModel { get; set; }
-        public ClientStatisticsViewModel ClientStatisticsViewModel { get; set; }
-        public OptionsViewModel OptionsViewModel { get; set; }
-        public PartyLineViewModel PartyLineViewModel { get; set; }
-        public ConnectionViewModel ConnectionViewModel { get; set; }
-        public PlayFieldViewModel PlayFieldViewModel { get; set; }
+        public WinListViewModel WinListViewModel { get; private set; }
+        public ClientStatisticsViewModel ClientStatisticsViewModel { get; private set; }
+        public OptionsViewModel OptionsViewModel { get; private set; }
+        public PartyLineViewModel PartyLineViewModel { get; private set; }
+        public ConnectionViewModel ConnectionViewModel { get; private set; }
+        public PlayFieldViewModel PlayFieldViewModel { get; private set; }
+        public AchievementsViewModel AchievementsViewModel { get; private set; }
 
         private int _activeTabItemIndex;
-        public int ActiveTabItemIndex {
-            get
-            {
-                return _activeTabItemIndex;
-            }
+
+        public int ActiveTabItemIndex
+        {
+            get { return _activeTabItemIndex; }
             set
             {
                 if (_activeTabItemIndex != value)
@@ -40,6 +42,12 @@ namespace TetriNET.WPF_WCF_Client.ViewModels
 
         public MainWindowViewModel()
         {
+            //
+            AchievementManager manager = new AchievementManager();
+            manager.FindAllAchievements();
+            Settings.Default.Achievements = Settings.Default.Achievements ?? new AchievementsSettings();
+            Settings.Default.Achievements.Load(manager.Achievements);
+
             // Create sub view models
             WinListViewModel = new WinListViewModel();
             ClientStatisticsViewModel = new ClientStatisticsViewModel();
@@ -47,40 +55,21 @@ namespace TetriNET.WPF_WCF_Client.ViewModels
             PartyLineViewModel = new PartyLineViewModel();
             ConnectionViewModel = new ConnectionViewModel();
             PlayFieldViewModel = new PlayFieldViewModel();
+            AchievementsViewModel = new AchievementsViewModel();
 
+            //
             ClientChanged += OnClientChanged;
 
             // Create client
-            Client = new Client.Client(Tetrimino.CreateTetrimino, () => new Board(Models.Options.Width, Models.Options.Height));
-
-            /*// Default values
-            Options.OptionsSingleton.Instance.KeySettings = new List<KeySetting>
-                {
-                    new KeySetting(Key.Space, Commands.Drop),
-                    new KeySetting(Key.Down, Commands.Down),
-                    new KeySetting(Key.Up, Commands.RotateCounterclockwise),
-                    new KeySetting(Key.PageUp, Commands.RotateClockwise),
-                    new KeySetting(Key.Left, Commands.Left),
-                    new KeySetting(Key.Right, Commands.Right),
-                    new KeySetting(Key.D, Commands.DiscardFirstSpecial),
-                    new KeySetting(Key.D1, Commands.UseSpecialOn1),
-                    new KeySetting(Key.D1, Commands.UseSpecialOn2),
-                    new KeySetting(Key.D3, Commands.UseSpecialOn3),
-                    new KeySetting(Key.D4, Commands.UseSpecialOn4),
-                    new KeySetting(Key.D5, Commands.UseSpecialOn5),
-                    new KeySetting(Key.D6, Commands.UseSpecialOn6),
-                };
-             * */
-            // Get saved options
-            Models.Options.OptionsSingleton.Instance.GetSavedOptions();
-            // Get saved or default server options
-            Models.Options.OptionsSingleton.Instance.ServerOptions = Settings.Default.GameOptions ?? Client.Options;
-            // TODO: fix this bug  ---- Workaround: remove duplicate key
-            Models.Options.OptionsSingleton.Instance.ServerOptions.SpecialOccurancies = Models.Options.OptionsSingleton.Instance.ServerOptions.SpecialOccurancies.GroupBy(x => x.Value).Select(x => x.First()).ToList();
-            Models.Options.OptionsSingleton.Instance.ServerOptions.TetriminoOccurancies = Models.Options.OptionsSingleton.Instance.ServerOptions.TetriminoOccurancies.GroupBy(x => x.Value).Select(x => x.First()).ToList();
+            Client = new Client.Client(Piece.CreatePiece, () => new BoardWithWallKick(ClientOptionsViewModel.Width, ClientOptionsViewModel.Height), () => manager);
+            //Client = new Client.Client(
+            //    (pieces, i, arg3, arg4, arg5, arg6) => Piece.CreatePiece(Pieces.TetriminoI, i, arg3, arg4, arg5, arg6),
+            //    () => new BoardWithWallKick(ClientOptionsViewModel.Width, ClientOptionsViewModel.Height),
+            //    () => manager);
         }
 
         #region ViewModelBase
+
         private void OnClientChanged(IClient oldClient, IClient newClient)
         {
             WinListViewModel.Client = newClient;
@@ -89,6 +78,7 @@ namespace TetriNET.WPF_WCF_Client.ViewModels
             PartyLineViewModel.Client = newClient;
             ConnectionViewModel.Client = newClient;
             PlayFieldViewModel.Client = newClient;
+            AchievementsViewModel.Client = newClient;
         }
 
         public override void UnsubscribeFromClientEvents(IClient oldClient)
@@ -110,16 +100,16 @@ namespace TetriNET.WPF_WCF_Client.ViewModels
             newClient.OnGameOver += OnGameOver;
             newClient.OnConnectionLost += OnConnectionLost;
         }
+
         #endregion
 
         #region IClient events handler
-        private void OnPlayerRegistered(RegistrationResults result, int playerId)
+
+        private void OnPlayerRegistered(RegistrationResults result, int playerId, bool isServerMaster)
         {
-            if (result == RegistrationResults.RegistrationSuccessful && Models.Options.OptionsSingleton.Instance.AutomaticallySwitchToPartyLineOnRegistered)
+            if (result == RegistrationResults.RegistrationSuccessful && ClientOptionsViewModel.Instance.AutomaticallySwitchToPartyLineOnRegistered)
                 if (ActiveTabItemIndex == ConnectionViewModel.TabIndex)
                     ActiveTabItemIndex = PartyLineViewModel.TabIndex;
-            if (result == RegistrationResults.RegistrationSuccessful && Client.IsServerMaster)
-                Client.ChangeOptions(Models.Options.OptionsSingleton.Instance.ServerOptions);
         }
 
         private void OnPlayerUnregisted()
@@ -129,25 +119,31 @@ namespace TetriNET.WPF_WCF_Client.ViewModels
 
         private void OnGameStarted()
         {
-            if (Models.Options.OptionsSingleton.Instance.AutomaticallySwitchToPlayFieldOnGameStarted)
+            if (ClientOptionsViewModel.Instance.AutomaticallySwitchToPlayFieldOnGameStarted)
                 ActiveTabItemIndex = PlayFieldViewModel.TabIndex;
         }
 
         private void OnGameFinished()
         {
-            if (Models.Options.OptionsSingleton.Instance.AutomaticallySwitchToPlayFieldOnGameStarted)
+            if (ClientOptionsViewModel.Instance.AutomaticallySwitchToPlayFieldOnGameStarted)
             {
                 if (ActiveTabItemIndex == PlayFieldViewModel.TabIndex)
+                {
                     ActiveTabItemIndex = PartyLineViewModel.TabIndex;
+                    PartyLineViewModel.ChatViewModel.IsInputFocused = true;
+                }
             }
         }
 
         private void OnGameOver()
         {
-            if (Models.Options.OptionsSingleton.Instance.AutomaticallySwitchToPlayFieldOnGameStarted)
+            if (ClientOptionsViewModel.Instance.AutomaticallySwitchToPlayFieldOnGameStarted)
             {
                 if (ActiveTabItemIndex == PlayFieldViewModel.TabIndex)
+                {
+                    PartyLineViewModel.ChatViewModel.IsInputFocused = true;
                     ActiveTabItemIndex = PartyLineViewModel.TabIndex;
+                }
             }
         }
 
@@ -155,6 +151,29 @@ namespace TetriNET.WPF_WCF_Client.ViewModels
         {
             ActiveTabItemIndex = ConnectionViewModel.TabIndex;
         }
+
         #endregion
+    }
+
+    public class MainWindowViewModelDesignData : MainWindowViewModel
+    {
+        public new WinListViewModelDesignData WinListViewModel { get; private set; }
+        public new ClientStatisticsViewModelDesignData ClientStatisticsViewModel { get; private set; }
+        public new OptionsViewModelDesignData OptionsViewModel { get; private set; }
+        public new PartyLineViewModelDesignData PartyLineViewModel { get; private set; }
+        public new ConnectionViewModelDesignData ConnectionViewModel { get; private set; }
+        public new PlayFieldViewModelDesignData PlayFieldViewModel { get; private set; }
+        public new AchievementsViewModelDesignData AchievementsViewModel { get; private set; }
+
+        public MainWindowViewModelDesignData()
+        {
+            WinListViewModel = new WinListViewModelDesignData();
+            ClientStatisticsViewModel = new ClientStatisticsViewModelDesignData();
+            OptionsViewModel = new OptionsViewModelDesignData();
+            PartyLineViewModel = new PartyLineViewModelDesignData();
+            ConnectionViewModel = new ConnectionViewModelDesignData();
+            PlayFieldViewModel = new PlayFieldViewModelDesignData();
+            AchievementsViewModel = new AchievementsViewModelDesignData();
+        }
     }
 }

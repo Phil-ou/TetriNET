@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Timers;
-using TetriNET.Common.Interfaces;
+using TetriNET.Client.Interfaces;
 
 namespace TetriNET.ConsoleWCFClient.GameController
 {
@@ -51,6 +51,9 @@ namespace TetriNET.ConsoleWCFClient.GameController
                     return;
                 switch (cmd)
                 {
+                    case Commands.Hold:
+                        Client.Hold();
+                        break;
                     case Commands.Drop:
                         Client.Drop();
                         break;
@@ -90,6 +93,9 @@ namespace TetriNET.ConsoleWCFClient.GameController
                         break;
                     case Commands.UseSpecialOn6:
                         Client.UseSpecial(5);
+                        break;
+                    case Commands.UseSpecialOnSelf:
+                        Client.UseSpecial(Client.PlayerId);
                         break;
                 }
                 if (_timers.ContainsKey(cmd))

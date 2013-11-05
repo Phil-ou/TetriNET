@@ -1,66 +1,72 @@
 ﻿using System.Runtime.Serialization;
-using TetriNET.Common.Helpers;
+using TetriNET.Common.Attributes;
 
 namespace TetriNET.Common.DataContracts
 {
     [DataContract]
-    public enum Specials // Specials index start after last tetrimino
+    public enum Specials // Specials index start after last piece
     {
         [EnumMember]
-        [Availability(false)]
+        [Special(false)]
         Invalid = 0,
 
         // TetriNET (http://en.wikipedia.org/wiki/TetriNET)
         [EnumMember]
-        [Availability(true, 'A', "Add Line")]
-        AddLines = Tetriminos.TetriminoLast+1,
+        [Special(true, 'A', "Add Line")]
+        AddLines = Pieces.MaxPieces + 1,
         [EnumMember]
-        [Availability(true, 'C', "Clear Line")]
+        [Special(true, 'C', "Clear Line")]
         ClearLines,
         [EnumMember]
-        [Availability(true, 'N', "Nuke Field")]
+        [Special(true, 'N', "Nuke Field")]
         NukeField,
         [EnumMember]
-        [Availability(true, 'R', "Random Blocks Clear")]
+        [Special(true, 'R', "Random Blocks Clear")]
         RandomBlocksClear,
         [EnumMember]
-        [Availability(true, 'S', "Switch Fields")]
+        [Special(true, 'S', "Switch Fields")]
         SwitchFields,
         [EnumMember]
-        [Availability(true, 'B', "Clear Special Blocks")]
+        [Special(true, 'B', "Clear Special Blocks")]
         ClearSpecialBlocks,
         [EnumMember]
-        [Availability(true, 'G', "Block Gravity")]
+        [Special(true, 'G', "Block Gravity")]
         BlockGravity,
         [EnumMember]
-        [Availability(true, 'Q', "Block Quake")]
+        [Special(true, 'Q', "Block Quake")]
         BlockQuake,
         [EnumMember]
-        [Availability(true, 'O', "Block Bomb")]
+        [Special(true, 'O', "Block Bomb")]
         BlockBomb,
 
         // TetriNET 2 (http://harddrop.com/wiki/Tetrinet2 or http://en.wikipedia.org/wiki/TetriNET or http://web.archive.org/web/20070623140748/www.tetrinet2.com/?page=overview_specials)
         [EnumMember]
-        [Availability(true, 'V', "Clear Column")]
+        [Special(true, 'V', "Clear Column")]
         ClearColumn,
         [EnumMember]
-        [Availability(true, 'D', "Darkness")]
+        [Special(true, 'I', "Immunity", true)] // 5 seconds
+        Immunity,
+        [EnumMember]
+        [Special(true, 'D', "Darkness", true)] // 5 seconds
         Darkness,
         [EnumMember]
-        [Availability(true, 'F', "Confusion")]
+        [Special(true, 'F', "Confusion", true)] // 5 seconds
         Confusion,
-        // NOT IMPLEMENTED Immunity
-        // NOT IMPLEMENTED Mutate Pieces
+        [EnumMember]
+        [Special(true, 'M', "Mutation", true)] // 5 pieces
+        Mutation,
 
         // Blocktrix (http://en.wikipedia.org/wiki/TetriNET)
-        //[EnumMember]
-        //ZebraField, // will be available when Left Gravity is implemented
+        [EnumMember]
+        [Special(true, 'Z', "Zebra Field")]
+        ZebraField,
         // NOT IMPLEMENTED Piece Change
-        // NOT IMPLEMENTED Left Gravity
+        [EnumMember]
+        [Special(true, 'L', "Left Gravity")]
+        LeftGravity,
 
         // BlockBattle (http://blockbattle.net/tutorial)
         // NOT IMPLEMENTED Multiplier
         // NOT IMPLEMENTED Pause
-        // NOT IMPLEMENTED Night (same as darkness)
     }
 }

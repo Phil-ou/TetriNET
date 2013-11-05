@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TetriNET.Common.Attributes;
+using TetriNET.Common.DataContracts;
 
 namespace TetriNET.Common.Helpers
 {
@@ -16,18 +18,27 @@ namespace TetriNET.Common.Helpers
             return Enum.GetValues(enumT).Cast<T>();
         }
 
-        public static IEnumerable<T> GetAvailableValues<T>()
+        public static IEnumerable<Pieces> GetPieces(Func<bool, bool> filter = null)
         {
-            Type enumT = typeof(T);
-            if (!enumT.IsEnum)
-                throw new InvalidCastException("GetValues must be used on enum");
-            return Enum.GetValues(enumT).Cast<T>()
+            return Enum.GetValues(typeof(Pieces)).Cast<Pieces>()
                 .Select(x => new
                 {
                     enumValue = x,
-                    attribute = GetAttribute<AvailabilityAttribute>(x)
+                    attribute = GetAttribute<PieceAttribute>(x)
                 })
-                .Where(x => x.attribute != null && x.attribute.Available)
+                .Where(x => x.attribute != null && (filter == null || filter(x.attribute.Available)))
+                .Select(x => x.enumValue);
+        }
+
+        public static IEnumerable<Specials> GetSpecials(Func<bool, bool> filter = null )
+        {
+            return Enum.GetValues(typeof(Specials)).Cast<Specials>()
+                .Select(x => new
+                {
+                    enumValue = x,
+                    attribute = GetAttribute<SpecialAttribute>(x)
+                })
+                .Where(x => x.attribute != null && (filter == null || filter(x.attribute.Available)))
                 .Select(x => x.enumValue);
         }
 

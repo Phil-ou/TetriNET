@@ -1,40 +1,66 @@
 ﻿using System;
 using System.Configuration;
-using TetriNET.Client.DefaultBoardAndTetriminos;
-using TetriNET.Common.Interfaces;
+using TetriNET.Client.Achievements;
+using TetriNET.Client.Board;
+using TetriNET.Client.Interfaces;
+using TetriNET.Client.Pieces;
+using TetriNET.Client.WCFProxy;
+using TetriNET.Common.DataContracts;
+using TetriNET.Common.Logger;
 using TetriNET.ConsoleWCFClient.AI;
-using TetriNET.ConsoleWCFClient.GameController;
 using TetriNET.ConsoleWCFClient.UI;
 
 namespace TetriNET.ConsoleWCFClient
 {
     public class Program
     {
+        private static void DisplayBotName(IBot bot)
+        {
+            Console.SetCursorPosition(40, 29);
+            Console.Write("Bot:{0}", bot.Name);
+        }
+
         static void Main(string[] args)
         {
+            const string team = "CONSOLE";
             string name = "CONSOLE_" + Guid.NewGuid().ToString().Substring(0, 5);
 
-            Logger.Log.Initialize(ConfigurationManager.AppSettings["logpath"], name+".log");
+            Log.Initialize(ConfigurationManager.AppSettings["logpath"], name+".log");
 
             //
             //string baseAddress = @"net.tcp://localhost:8765/TetriNET";
-            IClient client = new Client.Client(Tetrimino.CreateTetrimino, () => new Board(12,22));
+            AchievementManager manager = new AchievementManager();
+            manager.FindAllAchievements();
+            IClient client = new Client.Client(Piece.CreatePiece, () => new Board(12, 22), () => manager);
+            client.OnPlayerRegistered +=
+                (result, id, master) =>
+                {
+                    if (result == RegistrationResults.RegistrationSuccessful)
+                        client.ChangeTeam(team);
+                };
+            //IClient client = new Client.Client((piece, posX, posY, orientation, index) => new MutatedZ(posX, posY, orientation, index), () => new Board(12, 22));
 
             string baseAddress = ConfigurationManager.AppSettings["address"];
-            client.Connect(callback => new WCFProxy.WCFProxy(callback, baseAddress));
+            client.ConnectAndRegister(callback => new WCFProxy(callback, baseAddress), name);
 
             //
             GameController.GameController controller = new GameController.GameController(client);
-            PierreDellacherieOnePieceBot bot = new PierreDellacherieOnePieceBot(client)
+            PierreDellacherieOnePieceBot bot1 = new PierreDellacherieOnePieceBot(client)
             {
-                SleepTime = 100,
-                Activated = true,
+                SleepTime = 75,
+                Activated = false,
+            };
+            ColinFaheyTwoPiecesBot bot2 = new ColinFaheyTwoPiecesBot(client)
+            {
+                SleepTime = 75,
+                Activated = false,
             };
             //
             ConsoleUI ui = new ConsoleUI(client);
-
             //
-            client.Register(name);
+            IBot bot = bot1;
+            bot.Activated = true;
+            DisplayBotName(bot);
 
             //
             Console.Title = name;
@@ -72,6 +98,17 @@ namespace TetriNET.ConsoleWCFClient
                             bot.Activated = !bot.Activated;
                             break;
 
+                        // Switch bot strategy
+                        case ConsoleKey.Tab:
+                            bot.Activated = false;
+                            if (bot == bot1)
+                                bot = bot2;
+                            else
+                                bot = bot1;
+                            bot.Activated = true;
+                            DisplayBotName(bot);
+                            break;
+
                         // Game controller
                         case ConsoleKey.LeftArrow:
                             controller.KeyDown(Commands.Left);
@@ -84,6 +121,10 @@ namespace TetriNET.ConsoleWCFClient
                         case ConsoleKey.DownArrow:
                             controller.KeyDown(Commands.Down);
                             controller.KeyUp(Commands.Down);
+                            break;
+                        case ConsoleKey.H:
+                            controller.KeyDown(Commands.Hold);
+                            controller.KeyUp(Commands.Hold);
                             break;
                         case ConsoleKey.Spacebar:
                             controller.KeyDown(Commands.Drop);
@@ -127,6 +168,10 @@ namespace TetriNET.ConsoleWCFClient
                             controller.KeyDown(Commands.UseSpecialOn6);
                             controller.KeyUp(Commands.UseSpecialOn6);
                             break;
+                        case ConsoleKey.Enter:
+                            controller.KeyDown(Commands.UseSpecialOnSelf);
+                            controller.KeyUp(Commands.UseSpecialOnSelf);
+                            break;
                     }
                 }
                 else
@@ -135,8 +180,7 @@ namespace TetriNET.ConsoleWCFClient
                 }
             }
 
-            client.Unregister();
-            client.Disconnect();
+            client.UnregisterAndDisconnect();
         }
     }
 }

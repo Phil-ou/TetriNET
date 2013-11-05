@@ -1,47 +1,71 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using TetriNET.Client;
+using System.Linq;
+using System.Reflection;
+using TetriNET.Client.Achievements;
 using TetriNET.Common.DataContracts;
-using TetriNET.Common.Interfaces;
+using TetriNET.Client.Interfaces;
 using TetriNET.WPF_WCF_Client.Helpers;
+using TetriNET.WPF_WCF_Client.Models;
 
 namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
 {
-    public enum ChatColor
-    {
-        Red,
-        Green,
-        Orange,
-        Blue,
-        Black,
-        Yellow
-    }
-
     public class ChatEntry
     {
+        public enum ChatTypes
+        {
+            PlayerMessage = 0,
+            ServerMessage = 1,
+            SelfAchievement = 2,
+            OtherAchievement = 3,
+            InvalidAchievement = 4,
+        }
+
+        public ChatTypes ChatType { get; set; }
+
         public string PlayerName { get; set; }
-        public bool IsPlayerVisible { get; set; } // false if server message
         public string Msg { get; set; }
         public ChatColor Color { get; set; }
+        public IAchievement Achievement { get; set; }
+        public string AchievementTitle { get; set; }
+
+        public IClient Client { get; set; }
+
+        public bool IsEarned
+        {
+            get
+            {
+                if (Achievement != null && Client != null && Client.Achievements != null)
+                    return Client.Achievements.Any(x => x.Id == Achievement.Id && x.IsAchieved);
+                return false;
+            }
+        }
+
+        public DateTime FirstTimeAchieved
+        {
+            get
+            {
+                if (Achievement != null && Client != null && Client.Achievements != null)
+                {
+                    IAchievement achievement = Client.Achievements.FirstOrDefault(x => x.Id == Achievement.Id && x.IsAchieved);
+                    if (achievement != null)
+                        return achievement.FirstTimeAchieved;
+                }
+                return DateTime.MinValue;
+            }
+        }
     }
 
     public class ChatViewModel : ViewModelBase
     {
         private const int MaxEntries = 500;
 
-        private readonly ObservableCollection<ChatEntry> _chatEntries = new ObservableCollection<ChatEntry>();
-        public ObservableCollection<ChatEntry> ChatEntries
-        {
-            get { return _chatEntries; }
-        }
+        public ObservableCollection<ChatEntry> ChatEntries { get; private set; }
 
         private string _inputChat;
         public string InputChat
         {
-            get
-            {
-                return _inputChat;
-            }
+            get { return _inputChat; }
             set
             {
                 if (value != null)
@@ -68,25 +92,113 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
             }
         }
 
-        private void AddEntry(string msg, ChatColor color, string playerName = null)
+        private bool _isInputFocused;
+        public bool IsInputFocused
+        {
+            get { return _isInputFocused; }
+            set
+            {
+                _isInputFocused = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ChatViewModel()
+        {
+            ChatEntries = new ObservableCollection<ChatEntry>();
+        }
+
+        private void AddEntry(ChatEntry entry)
         {
             ExecuteOnUIThread.Invoke(() =>
             {
-                ChatEntries.Add(new ChatEntry
-                {
-                    PlayerName = playerName,
-                    Msg = msg,
-                    IsPlayerVisible = !String.IsNullOrEmpty(playerName),
-                    Color = color,
-                });
+                ChatEntries.Add(entry);
                 if (ChatEntries.Count > MaxEntries)
                     ChatEntries.RemoveAt(0);
             });
         }
 
+        private void AddPlayerMessage(string msg, ChatColor color, string playerName)
+        {
+            AddEntry(new ChatEntry
+                {
+                    ChatType = ChatEntry.ChatTypes.PlayerMessage,
+                    Msg = msg,
+                    Color = color,
+                    PlayerName = playerName,
+                });
+        }
+
+        private void AddServerMessage(string msg, ChatColor color)
+        {
+            AddEntry(new ChatEntry
+            {
+                ChatType = ChatEntry.ChatTypes.ServerMessage,
+                Msg = msg,
+                Color = color,
+            });
+        }
+
+        private void AddSelfAchievementMessage(ChatColor color, IAchievement achievement)
+        {
+            AddEntry(new ChatEntry
+            {
+                Client = Client,
+                ChatType = ChatEntry.ChatTypes.SelfAchievement,
+                Color = color,
+                Achievement = achievement,
+            });
+        }
+
+        private void AddOtherAchievementMessage(ChatColor color, string playerName, IAchievement achievement)
+        {
+            AddEntry(new ChatEntry
+            {
+                Client = Client,
+                ChatType = ChatEntry.ChatTypes.OtherAchievement,
+                Color = color,
+                PlayerName = playerName,
+                Achievement = achievement,
+            });
+        }
+
+        private void AddInvalidAchievementMessage(ChatColor color, string playerName, string achievementTitle)
+        {
+            AddEntry(new ChatEntry
+            {
+                Client = Client,
+                ChatType = ChatEntry.ChatTypes.InvalidAchievement,
+                Color = color,
+                PlayerName = playerName,
+                AchievementTitle = achievementTitle,
+            });
+        }
+
+        //private void AddEntry(ChatEntry.Types type, string msg, ChatColor color, string playerName = null, IAchievement achievement = null, string achievementTitle = null)
+        //{
+        //    ExecuteOnUIThread.Invoke(() =>
+        //        {
+        //            ChatEntries.Add(new ChatEntry
+        //                {
+        //                    Type = type,
+        //                    PlayerName = playerName,
+        //                    Msg = msg,
+        //                    IsPlayerVisible = !String.IsNullOrEmpty(playerName),
+        //                    Color = color,
+        //                    Achievement = achievement,
+        //                    AchievementTitle = achievementTitle
+        //                });
+        //            if (ChatEntries.Count > MaxEntries)
+        //                ChatEntries.RemoveAt(0);
+        //        });
+        //}
+
         #region ViewModelBase
+
         public override void UnsubscribeFromClientEvents(IClient oldClient)
         {
+            oldClient.OnPlayerAchievementEarned -= OnPlayerAchievementEarned;
+            oldClient.OnAchievementEarned -= OnAchievementEarned;
             oldClient.OnPlayerPublishMessage -= OnPlayerPublishMessage;
             oldClient.OnServerPublishMessage -= OnServerPublishMessage;
             oldClient.OnGameStarted -= OnGameStarted;
@@ -105,6 +217,8 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
 
         public override void SubscribeToClientEvents(IClient newClient)
         {
+            newClient.OnPlayerAchievementEarned += OnPlayerAchievementEarned;
+            newClient.OnAchievementEarned += OnAchievementEarned;
             newClient.OnPlayerPublishMessage += OnPlayerPublishMessage;
             newClient.OnServerPublishMessage += OnServerPublishMessage;
             newClient.OnGameStarted += OnGameStarted;
@@ -120,13 +234,14 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
             newClient.OnConnectionLost += OnConnectionLost;
             newClient.OnPlayerUnregistered += OnPlayerUnregistered;
         }
+
         #endregion
 
         #region IClient events handler
 
         private void OnPlayerUnregistered()
         {
-            AddEntry("*** You've unregistered successfully", ChatColor.Green);
+            AddServerMessage("*** You've unregistered successfully", ChatColor.Green);
             IsRegistered = true;
         }
 
@@ -137,7 +252,7 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
                 msg = "*** Server not found";
             else
                 msg = "*** Connection lost";
-            AddEntry(msg, ChatColor.Red);
+            AddServerMessage(msg, ChatColor.Red);
             IsRegistered = false;
         }
 
@@ -168,70 +283,136 @@ namespace TetriNET.WPF_WCF_Client.ViewModels.PartyLine
                     msg = String.Format("*** {0} has left {1}", playerName, reason);
                     break;
             }
-            AddEntry(msg, ChatColor.Green);
+            AddServerMessage(msg, ChatColor.Green);
         }
 
         private void OnPlayerJoined(int playerid, string playerName)
         {
-            AddEntry(String.Format("*** {0} has joined", playerName), ChatColor.Green);
+            AddServerMessage(String.Format("*** {0} has joined", playerName), ChatColor.Green);
         }
 
-        private void OnPlayerRegistered(RegistrationResults result, int playerId)
+        private void OnPlayerRegistered(RegistrationResults result, int playerId, bool isServerMaster)
         {
             if (result == RegistrationResults.RegistrationSuccessful)
             {
-                AddEntry("*** You've registered successfully", ChatColor.Green);
+                AddServerMessage("*** You've registered successfully", ChatColor.Green);
                 IsRegistered = true;
             }
             else
-                AddEntry("*** You've FAILED registering !!!", ChatColor.Red);
+                AddServerMessage("*** You've FAILED registering !!!", ChatColor.Red);
         }
 
         private void OnPlayerWon(int playerId, string playerName)
         {
-            AddEntry(String.Format("*** {0} has WON", playerName), ChatColor.Orange);
+            AddServerMessage(String.Format("*** {0} has WON", playerName), ChatColor.Orange);
         }
 
         private void OnPlayerLost(int playerId, string playerName)
         {
-            AddEntry(String.Format("*** {0} has LOST", playerName), ChatColor.Orange);
+            AddServerMessage(String.Format("*** {0} has LOST", playerName), ChatColor.Orange);
         }
 
         private void OnGameResumed()
         {
-            AddEntry("*** The game has been Resumed", ChatColor.Yellow);
+            AddServerMessage("*** The game has been Resumed", ChatColor.Yellow);
         }
 
         private void OnGamePaused()
         {
-            AddEntry("*** The game has been Paused", ChatColor.Yellow);
+            AddServerMessage("*** The game has been Paused", ChatColor.Yellow);
         }
 
         private void OnGameOver()
         {
-            AddEntry("*** You have LOST", ChatColor.Orange);
+            AddServerMessage("*** You have LOST", ChatColor.Orange);
         }
 
         private void OnGameFinished()
         {
-            AddEntry("*** The Game has Ended", ChatColor.Red);
+            AddServerMessage("*** The Game has Ended", ChatColor.Red);
         }
 
         private void OnGameStarted()
         {
-            AddEntry("*** The Game has Started", ChatColor.Red);
+            AddServerMessage("*** The Game has Started", ChatColor.Red);
         }
 
         private void OnPlayerPublishMessage(string playerName, string msg)
         {
-            AddEntry(msg, ChatColor.Black, playerName);
+            AddPlayerMessage(msg, ChatColor.Black, playerName);
         }
 
         private void OnServerPublishMessage(string msg)
         {
-            AddEntry(msg, ChatColor.Blue);
+            AddServerMessage(msg, ChatColor.Blue);
+        }
+
+        private void OnAchievementEarned(IAchievement achievement, bool firstTime)
+        {
+            if (firstTime)
+                AddSelfAchievementMessage(ChatColor.Blue, achievement);
+        }
+
+        private void OnPlayerAchievementEarned(int playerId, string playerName, int achievementId, string achievementTitle)
+        {
+            IAchievement achievement = Client.Achievements == null ? null : Client.Achievements.FirstOrDefault(x => x.Id == achievementId);
+
+            if (achievement == null)
+                AddInvalidAchievementMessage(ChatColor.Blue, playerName, achievementTitle);
+            else
+                AddOtherAchievementMessage(ChatColor.Blue, playerName, achievement);
         }
 
         #endregion
+    }
+
+    public class ChatViewModelDesignData : ChatViewModel
+    {
+        public new ObservableCollection<ChatEntry> ChatEntries { get; private set; }
+
+        public ChatViewModelDesignData()
+        {
+            AchievementManager manager = new AchievementManager();
+            manager.FindAllAchievements(Assembly.Load("TetriNET.Client.Achievements"));
+            IAchievement sniper = manager.Achievements.FirstOrDefault(x => x.Title == "Sniper");
+            IAchievement fearMyBrain = manager.Achievements.FirstOrDefault(x => x.Title == "Fear my brain !");
+
+            ChatEntries = new ObservableCollection<ChatEntry>
+                {
+                    new ChatEntry
+                        {
+                            ChatType = ChatEntry.ChatTypes.PlayerMessage,
+                            PlayerName = "Dummy1",
+                            Color = ChatColor.Green,
+                            Msg = "Message with player name visible",
+                        },
+                    new ChatEntry
+                        {
+                            ChatType = ChatEntry.ChatTypes.ServerMessage,
+                            Color = ChatColor.Red,
+                            Msg = "Message without player name",
+                        },
+                    new ChatEntry
+                        {
+                            ChatType = ChatEntry.ChatTypes.SelfAchievement,
+                            Color = ChatColor.Blue,
+                            Achievement = sniper,
+                        },
+                    new ChatEntry
+                        {
+                            ChatType = ChatEntry.ChatTypes.OtherAchievement,
+                            Color = ChatColor.Blue,
+                            Achievement = fearMyBrain,
+                            PlayerName = "Dummy2",
+                        },
+                    new ChatEntry
+                        {
+                            ChatType = ChatEntry.ChatTypes.InvalidAchievement,
+                            Color = ChatColor.Blue,
+                            AchievementTitle = "Too good for you",
+                            PlayerName = "Dummy3",
+                        }
+                };
+        }
     }
 }
